@@ -2,6 +2,7 @@
 #include "Main.h"
 #include "Config.h"
 #include "imgui.h"
+#include "WindowManager.h"
 
 GameLock::State GameLock::lastState = GameLock::State::None;
 
@@ -28,6 +29,7 @@ void GameLock::SetState(State currentState) {
     }
 
     if (currentState == State::Unlocked) {
+        WindowManager::MainInterface->PauseGame = true;
         auto& io = ImGui::GetIO();
         io.ClearInputKeys();
     }

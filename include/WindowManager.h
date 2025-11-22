@@ -6,7 +6,9 @@ typedef void(__stdcall* RenderFunction)();
 class WindowInterface {
 public:
     std::atomic<bool> IsOpen{false};
+    std::atomic<bool> PauseGame{false};
 };
+
 
 class Window {
 public:
@@ -18,10 +20,10 @@ public:
 
 class WindowManager {
 public:
-    static inline std::atomic<bool> ResumeGame{false};
     static inline std::vector<Window*> Windows;
     static inline WindowInterface* MainInterface;
     static bool IsAnyWindowOpen();
+    static bool ShouldTheGameBePaused();
     static void Close();
     static void Open();
 };

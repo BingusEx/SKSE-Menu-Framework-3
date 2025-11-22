@@ -78,4 +78,4 @@ int64_t RegisterHudElement(HudElementCallback callback) { return HudManager::Reg
 
 void UnregisterHudElement(uint64_t id) { HudManager::Unregister(id); }
 
-bool IsAnyWindowOpened() { return WindowManager::IsAnyWindowOpen(); }
+bool IsAnyBlockingWindowOpened() { return WindowManager::ShouldTheGameBePaused(); }

@@ -17,4 +17,4 @@ FUNCTION_PREFIX int64_t RegisterInpoutEvent(InputEventCallback callback);
 FUNCTION_PREFIX void UnregisterInputEvent(uint64_t id);
 FUNCTION_PREFIX int64_t RegisterHudElement(HudElementCallback callback);
 FUNCTION_PREFIX void UnregisterHudElement(uint64_t id);
-FUNCTION_PREFIX bool IsAnyWindowOpened();
+FUNCTION_PREFIX bool IsAnyBlockingWindowOpened();
