@@ -77,7 +77,6 @@ void __stdcall UI::RenderMenuWindow() {
             if (ImGui::MenuItem("Resume Game")) {
                 WindowManager::MainInterface->PauseGame = false;
             }
-            ImGui::MenuItem("Save");
             if (ImGui::MenuItem("Close")) {
                 WindowManager::MainInterface->IsOpen = false;
             }
