@@ -77,6 +77,7 @@ void __stdcall UI::RenderMenuWindow() {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Resume Game")) {
                 WindowManager::MainInterface->PauseGame = false;
+                WindowManager::ConfigInterface->PauseGame = false;
             }
             if (ImGui::MenuItem("Settings")) {
                 WindowManager::ConfigInterface->IsOpen = true;

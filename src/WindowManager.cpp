@@ -20,6 +20,8 @@ bool WindowManager::ShouldTheGameBePaused() {
 }
 
 void WindowManager::Close() {
+    WindowManager::MainInterface->PauseGame = true;
+    WindowManager::ConfigInterface->PauseGame = true;
     ConfigInterface->IsOpen = false;
     MainInterface->IsOpen = false;
 }

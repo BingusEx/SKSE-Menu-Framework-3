@@ -42,7 +42,6 @@ void GameLock::SetState(State currentState) {
     }
 
     if (currentState == State::Unlocked) {
-        WindowManager::MainInterface->PauseGame = true;
         auto& io = ImGui::GetIO();
         io.ClearInputKeys();
     }
