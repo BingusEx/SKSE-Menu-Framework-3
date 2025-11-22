@@ -67,39 +67,75 @@ void __stdcall UI::RenderMenuWindow() {
     ImGui::SetNextWindowSize(ImVec2{viewport->Size.x * 0.8f, viewport->Size.y * 0.8f}, ImGuiCond_Appearing);
     ImGuiWindowFlags window_flags = 0;
     window_flags |= ImGuiWindowFlags_NoCollapse;
-    ImGui::Begin("Mod Control Panel", nullptr, window_flags);
+    window_flags |= ImGuiWindowFlags_MenuBar;
+    window_flags |= ImGuiWindowFlags_NoTitleBar;
 
-    float offset1 = 20.0f;
-    float offset2 = 20.0f;
-    float offset3 = 0.0f;
+    ImGui::Begin("#MCPMainWindow", nullptr, window_flags);
 
-    if (Config::MenuStyle != MenuStyle::Classic) {
-        offset1 = 50.0f;
-        offset2 = 41.0f;
-        offset3 = 5.0f;
+    if (ImGui::BeginMenuBar()) {
+        if (ImGui::BeginMenu("File")) {
+            ImGui::MenuItem("Open..");
+            ImGui::MenuItem("Save");
+            if (ImGui::MenuItem("Close")) {
+                WindowManager::MainInterface->IsOpen = false;
+            }
+            ImGui::EndMenu();
+        }
+
+        float barWidth = ImGui::GetWindowWidth();
+        float barHeight = ImGui::GetFrameHeight();
+        float textWidth = ImGui::CalcTextSize("Mod Control Panel").x;
+
+        float closeButtonSize = barHeight;
+        float padding = ImGui::GetStyle().ItemSpacing.x;
+
+        float availableWidth = barWidth - closeButtonSize - padding;
+        float pos = (availableWidth * 0.5f) - (textWidth * 0.5f);
+        ImGui::SameLine(pos);
+        ImGui::Text("Mod Control Panel");
+
+        //float closeButtonPos = barWidth - closeButtonSize - padding;
+        //ImGui::SameLine(closeButtonPos);
+        //ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+        //if (ImGui::Button("X", ImVec2(closeButtonSize, closeButtonSize))) {
+        //    WindowManager::MainInterface->IsOpen = false;
+        //}
+        //ImGui::PopStyleVar();
+
+        ImGui::EndMenuBar();
     }
 
+    float filterHeight = 20.0f;
+    float headerHeight = 20.0f;
+    float headerOffsetY = 0.0f;
+    if (Config::MenuStyle != MenuStyle::Classic) {
+        filterHeight = 50.0f;
+        headerHeight = 41.0f;
+        headerOffsetY = 5.0f;
+    }
 
-    ImGui::BeginChild("TreeView2", ImVec2(ImGui::GetContentRegionAvail().x * 0.3f, offset1), ImGuiChildFlags_None,
-                      window_flags);
+    // Filter section
+    ImGui::BeginChild("TreeView2", ImVec2(ImGui::GetContentRegionAvail().x * 0.3f, filterHeight), ImGuiChildFlags_None);
     filter.Draw("##SKSEModControlPanelMenuFilter", -FLT_MIN);
     ImGui::EndChild();
+
     ImGui::SameLine();
-    ImGui::BeginChild("SKSEModControlPanelModMenuHeader", ImVec2(0, offset2), ImGuiChildFlags_None, window_flags);
+
+    // Header section
+    ImGui::BeginChild("SKSEModControlPanelModMenuHeader", ImVec2(0, headerHeight), ImGuiChildFlags_None);
     if (display_node) {
         auto windowWidth = ImGui::GetWindowSize().x;
         auto textWidth = ImGui::CalcTextSize(display_node->Title.c_str()).x;
         float offsetX = (windowWidth - textWidth) * 0.5f;
         ImGui::SetCursorPosX(offsetX);
-        ImGui::SetCursorPosY(offset3);
-        ImGui::Text(display_node->Title.c_str());
-    } else {
-        // TODO: Default title
+        ImGui::SetCursorPosY(headerOffsetY);
+        ImGui::Text("%s", display_node->Title.c_str());
     }
     ImGui::EndChild();
 
+    // Tree view section
     ImGui::BeginChild("SKSEModControlPanelTreeView", ImVec2(ImGui::GetContentRegionAvail().x * 0.3f, -FLT_MIN),
-                      ImGuiChildFlags_Border, window_flags);
+                      ImGuiChildFlags_Border);
     node_id = 0;
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 5.0f));
     for (const auto& item : RootMenu->Children) {
@@ -107,7 +143,6 @@ void __stdcall UI::RenderMenuWindow() {
             (ImGui::CollapsingHeader(std::format("{}##{}", item.first, node_id).c_str()))) {
             for (auto node : item.second->SortedChildren) {
                 RenderNode(node);
-
             }
         } else {
             for (auto node : item.second->Children) {
@@ -117,12 +152,16 @@ void __stdcall UI::RenderMenuWindow() {
     }
     ImGui::PopStyleVar();
     ImGui::EndChild();
+
     ImGui::SameLine();
-    ImGui::BeginChild("SKSEModControlPanelMenuNode", ImVec2(0, -FLT_MIN), ImGuiChildFlags_Border, window_flags);
+
+    // Content section
+    ImGui::BeginChild("SKSEModControlPanelMenuNode", ImVec2(0, -FLT_MIN), ImGuiChildFlags_Border);
     if (display_node) {
         display_node->Render();
     }
     ImGui::EndChild();
+
     ImGui::End();
 }
 
