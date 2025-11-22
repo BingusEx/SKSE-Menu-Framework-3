@@ -103,12 +103,10 @@ void __stdcall UI::RenderMenuWindow() {
         float closeButtonPos = barWidth - closeButtonSize - padding;
         ImGui::SameLine(closeButtonPos);
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-        PushSolid();
-        if (ImGui::Button("\u58", ImVec2(closeButtonSize, closeButtonSize))) {
+        if (ImGui::Button("X", ImVec2(closeButtonSize, closeButtonSize))) {
             WindowManager::MainInterface->IsOpen = false;
             WindowManager::ConfigInterface->IsOpen = false;
         }
-        Pop();
         ImGui::PopStyleVar();
 
         ImGui::EndMenuBar();
@@ -240,11 +238,9 @@ void UI::RenderConfigWindow() {
             float closeButtonPos = barWidth - closeButtonSize - padding;
             ImGui::SameLine(closeButtonPos);
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-            PushSolid();
-            if (ImGui::Button("\u58", ImVec2(closeButtonSize, closeButtonSize))) {
+            if (ImGui::Button("X", ImVec2(closeButtonSize, closeButtonSize))) {
                 WindowManager::ConfigInterface->IsOpen = false;
             }
-            Pop();
             ImGui::PopStyleVar();
             ImGui::EndMenuBar();
         }
