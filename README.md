@@ -34,18 +34,18 @@ Example of defining a user input callback function
 
 ```cpp
 bool __stdcall UI::Example5::OnInput(RE::InputEvent* event) { 
-    bool blockUserInput = false;
+    bool blockThisUserInput = false;
 
     if (event->device == RE::INPUT_DEVICE::kKeyboard) {
         if (auto button = event->AsButtonEvent()) {
             if (button->GetIDCode() == RE::BSWin32KeyboardDevice::Key::kB && button->IsDown()) {
                 NonPausingWindow->IsOpen = !NonPausingWindow->IsOpen;
-                blockUserInput = true;
+                blockThisUserInput = true;
             }
         }
     }
 
-    return blockUserInput;
+    return blockThisUserInput;
 }
 ```
 ## Foreground drawing
