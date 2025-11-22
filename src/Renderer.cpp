@@ -10,35 +10,6 @@
 #include "imgui_impl_win32.h"
 #include "dxgi.h"
 #include "Main.h"
-GameLock::State GameLock::lastState = GameLock::State::None;
-
-void GameLock::SetState(State currentState) {
-    if (lastState == currentState) {
-        return;
-    }
-    lastState = currentState;
-    if (Config::FreezeTimeOnMenu) {
-        const auto main = reinterpret_cast<CustomRE::Main*>(RE::Main::GetSingleton());
-        if (currentState == State::Locked) {
-            main->freezeTime = true;
-        } else {
-            main->freezeTime = false;
-        }
-    }
-
-    if (Config::BlurBackgroundOnMenu) {
-        if (currentState == State::Locked) {
-            RE::UIBlurManager::GetSingleton()->IncrementBlurCount();
-        } else {
-            RE::UIBlurManager::GetSingleton()->DecrementBlurCount();
-        }
-    }
-
-    if (currentState == State::Unlocked) {
-        auto& io = ImGui::GetIO();
-        io.ClearInputKeys();
-    }
-}
 
 
 bool UI::Renderer::ProcessOpenClose(RE::InputEvent* const* evns) {

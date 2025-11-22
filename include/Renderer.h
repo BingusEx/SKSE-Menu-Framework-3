@@ -4,12 +4,6 @@
 #include "Input.h"
 
 
-namespace GameLock {
-    enum State { None, Locked, Unlocked };
-    extern State lastState;
-    void SetState(State currentState);
-}
-
 namespace UI {
 
     class Renderer {

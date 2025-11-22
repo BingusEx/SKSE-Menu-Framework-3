@@ -7,6 +7,8 @@
 #include "WindowManager.h"
 #include "InputEventHandler.h"
 #include "HudManager.h"
+#include "GameLock.h"
+
 void Hooks::Install() {
     D3DInitHook::install();
     DXGIPresentHook::install();
@@ -160,6 +162,10 @@ void Hooks::DXGIPresentHook::thunk(std::uint32_t a_timer) {
     ImGui::NewFrame();
     HudManager::Render();
     if (WindowManager::IsAnyWindowOpen()) {
+        if (WindowManager::ResumeGame) {
+            GameLock::SetState(GameLock::State::Resume);
+        }
+
         UI::Renderer::RenderWindows();
     } else {
         GameLock::SetState(GameLock::State::Unlocked);
