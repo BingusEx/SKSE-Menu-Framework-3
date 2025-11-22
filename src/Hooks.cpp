@@ -49,7 +49,9 @@ void Hooks::ProcessInputQueueHook::thunk(RE::BSTEventSource<RE::InputEvent*>* a_
         if (WindowManager::IsAnyWindowOpen() && !WindowManager::ResumeGame) {
             constexpr RE::InputEvent* const dummy[] = {nullptr};
             originalFunction(a_dispatcher, dummy);
-            UI::TranslateInputEvent(a_event);
+            if (!WindowManager::ResumeGame) {
+                UI::TranslateInputEvent(a_event);
+            }
         } else {
             originalFunction(a_dispatcher, a_event);
         }
@@ -162,8 +164,12 @@ void Hooks::DXGIPresentHook::thunk(std::uint32_t a_timer) {
     ImGui::NewFrame();
     HudManager::Render();
     if (WindowManager::IsAnyWindowOpen()) {
+        auto& io = ImGui::GetIO();
         if (WindowManager::ResumeGame) {
+            io.MouseDrawCursor = false;
             GameLock::SetState(GameLock::State::Resume);
+        } else {
+            io.MouseDrawCursor = true;
         }
 
         UI::Renderer::RenderWindows();
