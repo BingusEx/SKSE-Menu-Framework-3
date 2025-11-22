@@ -53,7 +53,7 @@ void Config::Init() {
     }
 
     ini->SetSection("Fonts");  
-    PrimaryFont = ini->GetString("PrimaryFont", "CN.ttf");
+    PrimaryFont = ini->GetString("PrimaryFont", "MainFont.ttf");
     EnableChinese = ini->GetBool("EnableChinese", true);
     EnableJapanese = ini->GetBool("EnableJapanese", false);
     EnableKorean = ini->GetBool("EnableKorean", false);

@@ -8,6 +8,8 @@
 #include "InputEventHandler.h"
 #include "HudManager.h"
 #include "GameLock.h"
+#include "TextureLoader.h"
+
 
 void Hooks::Install() {
     D3DInitHook::install();
@@ -88,6 +90,8 @@ void Hooks::D3DInitHook::thunk() {
     }
     const auto device = reinterpret_cast<ID3D11Device*>(data.forwarder);
     const auto context = reinterpret_cast<ID3D11DeviceContext*>(data.context);
+
+    TextureLoader::Init(device, context);
 
     SKSE::log::info("Initializing ImGui...");
 

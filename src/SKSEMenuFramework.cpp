@@ -4,6 +4,7 @@
 #include "Application.h"
 #include "Renderer.h"
 #include "UI.h"
+#include "TextureLoader.h"
 #
 void AddSectionItem(const char* path, RenderFunction rendererFunction) { 
     auto pathSplit = SplitString(path, '/');
@@ -79,3 +80,7 @@ int64_t RegisterHudElement(HudElementCallback callback) { return HudManager::Reg
 void UnregisterHudElement(uint64_t id) { HudManager::Unregister(id); }
 
 bool IsAnyBlockingWindowOpened() { return WindowManager::ShouldTheGameBePaused(); }
+
+ImTextureID LoadTexture(const char* texturePath, ImVec2* size) {
+    return TextureLoader::GetTexture(texturePath, size ? *size : ImVec2{0,0});
+}

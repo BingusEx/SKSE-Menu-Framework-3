@@ -8,10 +8,10 @@
     "simpleini",
     "spdlog",
     "xbyak",
+    "nanosvg",
     "rapidcsv",
     "directxmath",
     "directxtk",
-    "boost-stl-interfaces",
     "clib-util"
   ],
   "overrides": [

@@ -2,6 +2,7 @@
 #include "InputEventHandler.h"
 #include "WindowManager.h"
 #include "HudManager.h"
+#include "imgui.h"
 #define FUNCTION_PREFIX extern "C" [[maybe_unused]] __declspec(dllexport)
 
 FUNCTION_PREFIX void AddSectionItem(const char* path, RenderFunction rendererFunction);
@@ -18,3 +19,4 @@ FUNCTION_PREFIX void UnregisterInputEvent(uint64_t id);
 FUNCTION_PREFIX int64_t RegisterHudElement(HudElementCallback callback);
 FUNCTION_PREFIX void UnregisterHudElement(uint64_t id);
 FUNCTION_PREFIX bool IsAnyBlockingWindowOpened();
+FUNCTION_PREFIX ImTextureID LoadTexture(const char* texturePath, ImVec2* size);
