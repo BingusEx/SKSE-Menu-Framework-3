@@ -9,7 +9,7 @@
 #include "imgui_impl_dx11.h"
 #include "imgui_impl_win32.h"
 #include "dxgi.h"
-
+#include "Main.h"
 GameLock::State GameLock::lastState = GameLock::State::None;
 
 void GameLock::SetState(State currentState) {
@@ -18,7 +18,7 @@ void GameLock::SetState(State currentState) {
     }
     lastState = currentState;
     if (Config::FreezeTimeOnMenu) {
-        const auto main = RE::Main::GetSingleton();
+        const auto main = reinterpret_cast<CustomRE::Main*>(RE::Main::GetSingleton());
         if (currentState == State::Locked) {
             main->freezeTime = true;
         } else {
