@@ -2,6 +2,7 @@
 #include "WindowManager.h"
 #include <imgui.h>
 #include "Renderer.h"
+#include "StyleManager.h"
 
 static ImGuiTextFilter filter;
 
@@ -79,9 +80,6 @@ void __stdcall UI::RenderMenuWindow() {
             }
             if (ImGui::MenuItem("Settings")) {
                 WindowManager::ConfigInterface->IsOpen = true;
-            }
-            if (ImGui::MenuItem("Close")) {
-                WindowManager::MainInterface->IsOpen = false;
             }
             ImGui::EndMenu();
         }
@@ -216,10 +214,17 @@ void UI::RenderConfigWindow() {
              if (ImGui::Button("X", ImVec2(closeButtonSize, closeButtonSize))) {
                  WindowManager::ConfigInterface->IsOpen = false;
              }
-             ImGui::PopStyleVar();
+            ImGui::PopStyleVar();
             ImGui::EndMenuBar();
         }
+        const char* styleNames[] = {"Skyrim", "Modern", "Classic"};
+        int currentStyle = static_cast<int>(Config::MenuStyle);
 
+        ImGui::Text("Menu Style:");
+        if (ImGui::Combo("##MenuStyleCombo", &currentStyle, styleNames, IM_ARRAYSIZE(styleNames))) {
+            Config::MenuStyle = static_cast<MenuStyle>(currentStyle);
+            StyleManager::LoadStyle();
+        }
 
         ImGui::End();
     }

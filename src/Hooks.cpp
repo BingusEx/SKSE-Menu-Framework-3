@@ -125,11 +125,7 @@ void Hooks::D3DInitHook::thunk() {
         SKSE::log::error("SetWindowLongPtrA failed!");
     }
 
-    if (Config::MenuStyle == MenuStyle::Skyrim) {
-        StyleManager::TransparentStyle();
-    } else if (Config::MenuStyle == MenuStyle::Modern) {
-        StyleManager::ModernStyle();
-    }
+    StyleManager::LoadStyle();
 
     auto regular = FontManager::LoadFonts(io, 32.0f);
     io.FontDefault = regular.defaultFont;

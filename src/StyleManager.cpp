@@ -1,6 +1,6 @@
 #include "StyleManager.h"
 #include "imgui_internal.h"
-
+#include "Config.h"
 void StyleManager::ModernStyle() {
     // Assuming you have set up Dear ImGui properly in your application
     ImGui::StyleColorsDark();
@@ -72,6 +72,16 @@ void StyleManager::ModernStyle() {
     colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
     colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
     colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
+}
+
+void StyleManager::LoadStyle() {
+    if (Config::MenuStyle == MenuStyle::Skyrim) {
+        TransparentStyle();
+    } else if (Config::MenuStyle == MenuStyle::Modern) {
+        ModernStyle();
+    } else {
+        DefaultStyle();
+    }
 }
 
 void StyleManager::TransparentStyle() {
@@ -163,4 +173,21 @@ void StyleManager::TransparentStyle() {
     colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.6f);
 
     colors[ImGuiCol_NavHighlight] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+}
+void StyleManager::DefaultStyle() {
+    ImGui::StyleColorsClassic();
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.WindowRounding = 0.0f;
+    style.FrameRounding = 0.0f;
+    style.GrabRounding = 0.0f;
+    style.ScrollbarRounding = 0.0f;
+    style.ChildRounding = 0.0f;
+    style.PopupRounding = 0.0f;
+    style.WindowBorderSize = 1.0f;
+    style.ChildBorderSize = 1.0f;
+    style.FrameBorderSize = 0.0f;
+    style.PopupBorderSize = 1.0f;
+    style.TabBarBorderSize = 0.0f;
+    style.TabBorderSize = 0.0f;
+    style.FramePadding = ImVec2(4.0f, 3.0f);
 }
