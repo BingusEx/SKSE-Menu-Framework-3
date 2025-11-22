@@ -87,6 +87,28 @@ void Config::Save() {
     } else if (Config::MenuStyle == MenuStyle::Classic) {
         menuStyleStr = "DEFAULT";
     }
+    if (ToggleMode == 0) {
+        ini->SetString("ToggleMode", "SINGLEPRESS");
+    }
+    else if (ToggleMode == 1) {
+        ini->SetString("ToggleMode", "HOLD");
+    }
+    else if (ToggleMode == 2) {
+        ini->SetString("ToggleMode", "DOUBLEPRESS");
+    }
+
+    if (ToggleModeGamePad == 0) {
+        ini->SetString("ToggleModeGamePad", "SINGLEPRESS");
+    } else if (ToggleModeGamePad == 1) {
+        ini->SetString("ToggleModeGamePad", "HOLD");
+    } else if (ToggleModeGamePad == 2) {
+        ini->SetString("ToggleModeGamePad", "DOUBLEPRESS");
+    }
+
+    ini->SetString("ToggleKey", GetKeyName(ToggleKey, RE::INPUT_DEVICE::kKeyboard).c_str());
+    ini->SetString("ToggleKeyGamePad", GetKeyName(ToggleKeyGamePad, RE::INPUT_DEVICE::kGamepad).c_str());
+
+
     ini->SetString("MenuStyle", menuStyleStr);
 
     // Fonts Section
