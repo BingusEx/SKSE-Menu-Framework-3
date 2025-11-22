@@ -1,6 +1,4 @@
 #include "Licence.h"
-#include <algorithm>
-#include <cctype>
 
 const char* contents =
     "# SKSEMenuFramework - SKSE Plugin"
