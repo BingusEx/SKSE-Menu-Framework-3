@@ -12,6 +12,7 @@
     "rapidcsv",
     "directxmath",
     "directxtk",
+    "nlohmann-json",
     "clib-util"
   ],
   "overrides": [

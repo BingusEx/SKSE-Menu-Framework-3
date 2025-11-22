@@ -2,7 +2,6 @@
 #include "WindowManager.h"
 #include <imgui.h>
 #include "Renderer.h"
-#include "StyleManager.h"
 #include "Application.h"
 #include "SKSEMenuFramework.h"
 static ImGuiTextFilter filter;
@@ -112,14 +111,11 @@ void __stdcall UI::RenderMenuWindow() {
         ImGui::EndMenuBar();
     }
 
-    float filterHeight = 20.0f;
-    float headerHeight = 20.0f;
-    float headerOffsetY = 0.0f;
-    if (Config::MenuStyle != MenuStyle::Classic) {
-        filterHeight = 50.0f;
-        headerHeight = 41.0f;
-        headerOffsetY = 5.0f;
-    }
+    float filterHeight = 50.0f;
+    float headerHeight = 41.0f;
+    float headerOffsetY = 5.0f;
+
+
 
     // Filter section
     ImGui::BeginChild("TreeView2", ImVec2(ImGui::GetContentRegionAvail().x * 0.3f, filterHeight), ImGuiChildFlags_None);
@@ -237,12 +233,12 @@ void UI::RenderConfigWindow() {
             float closeButtonSize = barHeight;
             float padding = ImGui::GetStyle().ItemSpacing.x;
 
-             float closeButtonPos = barWidth - closeButtonSize - padding;
-             ImGui::SameLine(closeButtonPos);
-             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-             if (ImGui::Button("X", ImVec2(closeButtonSize, closeButtonSize))) {
-                 WindowManager::ConfigInterface->IsOpen = false;
-             }
+            float closeButtonPos = barWidth - closeButtonSize - padding;
+            ImGui::SameLine(closeButtonPos);
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            if (ImGui::Button("X", ImVec2(closeButtonSize, closeButtonSize))) {
+                WindowManager::ConfigInterface->IsOpen = false;
+            }
             ImGui::PopStyleVar();
             ImGui::EndMenuBar();
         }
@@ -257,21 +253,25 @@ void UI::RenderConfigWindow() {
 
         ImGui::BeginGroup();
         ImGui::PushItemWidth(contentWidth);
-    
 
-        const char* styleNames[] = {"Skyrim", "Modern", "Classic"};
-        int currentStyle = static_cast<int>(Config::MenuStyle);
-        ImGui::Text("Menu Style:");
-        if (ImGui::Combo("##MenuStyleCombo", &currentStyle, styleNames, IM_ARRAYSIZE(styleNames))) {
-            Config::MenuStyle = static_cast<MenuStyle>(currentStyle);
-            StyleManager::LoadStyle();
-            Config::Save();
+        // ... all your combo boxes and settings ...
+
+        std::vector<const char*> styleNames;
+        styleNames.reserve(Config::MenuStyles.size());
+
+        for (const auto& s : Config::MenuStyles) {
+            styleNames.push_back(s.c_str());
         }
 
+        ImGui::Text("Menu Style:");
+        if (ImGui::Combo("##MenuStyleCombo", &Config::MenuStyle, styleNames.data(), styleNames.size())) {
+            Config::LoadStyle();
+            Config::Save();
+        }
         if (ToggleButton("Freeze Time", &Config::FreezeTimeOnMenu)) {
             Config::Save();
         }
-        
+
         if (ToggleButton("Blur Background", &Config::BlurBackgroundOnMenu)) {
             Config::Save();
         }
@@ -281,13 +281,10 @@ void UI::RenderConfigWindow() {
         ImGui::Text("Toggle Mode (Keyboard):");
         if (ImGui::Combo("##ToggleModeCombo", &currentTogleMode, togleModeNames, IM_ARRAYSIZE(togleModeNames))) {
             Config::ToggleMode = currentTogleMode;
-            StyleManager::LoadStyle();
             Config::Save();
         }
 
-        
         ImGui::Separator();
-
 
         ImGui::Text("Toggle Key (Keyboard):");
         std::string currentKeyName = GetKeyName(Config::ToggleKey, RE::INPUT_DEVICES::kKeyboard);
@@ -340,11 +337,9 @@ void UI::RenderConfigWindow() {
         if (ImGui::Combo("##ToggleModeComboGAmepad", &currentTogleModeGamepad, togleModeNames,
                          IM_ARRAYSIZE(togleModeNames))) {
             Config::ToggleModeGamePad = currentTogleModeGamepad;
-            StyleManager::LoadStyle();
             Config::Save();
         }
 
-        // Toggle Key - Gamepad
         ImGui::Text("Toggle Key (Gamepad):");
         std::string currentButtonName = GetKeyName(Config::ToggleKeyGamePad, RE::INPUT_DEVICES::kGamepad);
         if (ImGui::BeginCombo("##ToggleKeyGamepad", currentButtonName.c_str())) {
@@ -366,6 +361,8 @@ void UI::RenderConfigWindow() {
             ImGui::EndCombo();
         }
 
-        ImGui::End();
+        ImGui::PopItemWidth();  // ADDED: Pop the item width
+        ImGui::EndGroup();      // ADDED: End the group
     }
+    ImGui::End();  // MOVED: Always call End() after Begin()
 }

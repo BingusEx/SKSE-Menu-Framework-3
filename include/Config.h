@@ -1,10 +1,5 @@
 #pragma once
 
-enum MenuStyle {
-    Skyrim,
-    Modern,
-    Classic
-};
 
 class Config {
     public:
@@ -16,11 +11,13 @@ class Config {
     static uint8_t ToggleModeGamePad;
     static bool FreezeTimeOnMenu;
     static bool BlurBackgroundOnMenu;
-    static MenuStyle MenuStyle;
+    static int MenuStyle;
+    static std::vector<std::string> MenuStyles;
     static std::string PrimaryFont;
     static bool EnableChinese;
     static bool EnableJapanese;
     static bool EnableKorean;
     static bool EnableCyrillic;
     static bool EnableThai;
+    static void LoadStyle();
 };

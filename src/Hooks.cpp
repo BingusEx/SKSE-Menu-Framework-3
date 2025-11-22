@@ -1,7 +1,6 @@
 #include "Hooks.h"
 #include "Renderer.h"
 #include "FontManager.h"
-#include "StyleManager.h"
 #include "imgui_impl_dx11.h"
 #include "imgui_impl_win32.h"
 #include "WindowManager.h"
@@ -125,7 +124,7 @@ void Hooks::D3DInitHook::thunk() {
         SKSE::log::error("SetWindowLongPtrA failed!");
     }
 
-    StyleManager::LoadStyle();
+    Config::LoadStyle();
 
     auto regular = FontManager::LoadFonts(io, 32.0f);
     io.FontDefault = regular.defaultFont;

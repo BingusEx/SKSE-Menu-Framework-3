@@ -1,12 +1,13 @@
 ﻿#include "Config.h"
 #include "Application.h"
-
+#include "Theme.h"
 unsigned int Config::ToggleKey = 0x3B;
 uint8_t Config::ToggleMode = 0;
 unsigned int Config::ToggleKeyGamePad = 0;
 uint8_t Config::ToggleModeGamePad = 0;
 bool Config::FreezeTimeOnMenu = true;
-MenuStyle Config::MenuStyle = MenuStyle::Skyrim;
+int Config::MenuStyle = 0;
+std::vector<std::string> Config::MenuStyles;
 bool Config::BlurBackgroundOnMenu = true;
 std::string Config::PrimaryFont = "CN.ttf";  
 bool Config::EnableChinese = true;                                
@@ -46,11 +47,9 @@ void Config::Init() {
     BlurBackgroundOnMenu = ini->GetBool("BlurBackgroundOnMenu", true);
     auto menuStyleStr = toUpperCase(ini->GetString("MenuStyle", "SKYRIM"));
 
-    if (strcmp(menuStyleStr, "MODERN") == 0) {
-        Config::MenuStyle = MenuStyle::Modern;
-    } else if(strcmp(menuStyleStr, "DEFAULT") == 0) {
-        Config::MenuStyle = MenuStyle::Classic;
-    }
+    MenuStyles = Theme::GetJsonFiles();
+
+    //LoadStyle();
 
     ini->SetSection("Fonts");  
     PrimaryFont = ini->GetString("PrimaryFont", "MainFont.ttf");
@@ -81,12 +80,7 @@ void Config::Save() {
     ini->SetBool("FreezeTimeOnMenu", FreezeTimeOnMenu);
     ini->SetBool("BlurBackgroundOnMenu", BlurBackgroundOnMenu);
 
-    const char* menuStyleStr = "SKYRIM";
-    if (Config::MenuStyle == MenuStyle::Modern) {
-        menuStyleStr = "MODERN";
-    } else if (Config::MenuStyle == MenuStyle::Classic) {
-        menuStyleStr = "DEFAULT";
-    }
+
     if (ToggleMode == 0) {
         ini->SetString("ToggleMode", "SINGLEPRESS");
     }
@@ -109,7 +103,7 @@ void Config::Save() {
     ini->SetString("ToggleKeyGamePad", GetKeyName(ToggleKeyGamePad, RE::INPUT_DEVICE::kGamepad).c_str());
 
 
-    ini->SetString("MenuStyle", menuStyleStr);
+    ini->SetString("MenuStyle", MenuStyles[MenuStyle].c_str());
 
     // Fonts Section
     ini->SetSection("Fonts");
@@ -127,4 +121,8 @@ void Config::Save() {
     }
 
     delete ini;
+}
+
+void Config::LoadStyle() { Theme::LoadJsonStyle(MenuStyles[MenuStyle]);
+
 }
