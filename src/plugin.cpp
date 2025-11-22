@@ -3,10 +3,13 @@
 #include "Logger.h"
 #include "UI.h"
 #include "SKSEMenuFramework.h"
+#include "Licence.h"
 
-SKSEPluginLoad(const SKSE::LoadInterface *skse) {
-
+SKSEPluginLoad(const SKSE::LoadInterface* skse) {
     SetupLog();
+    if (!Licence::Validate()) {
+        return false;
+    }
     logger::info("Plugin loaded");
     SKSE::Init(skse);
     Config::Init();
