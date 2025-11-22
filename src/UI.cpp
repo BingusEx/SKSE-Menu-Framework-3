@@ -77,6 +77,9 @@ void __stdcall UI::RenderMenuWindow() {
             if (ImGui::MenuItem("Resume Game")) {
                 WindowManager::MainInterface->PauseGame = false;
             }
+            if (ImGui::MenuItem("Settings")) {
+                WindowManager::ConfigInterface->IsOpen = true;
+            }
             if (ImGui::MenuItem("Close")) {
                 WindowManager::MainInterface->IsOpen = false;
             }
@@ -95,13 +98,14 @@ void __stdcall UI::RenderMenuWindow() {
         ImGui::SameLine(pos);
         ImGui::Text("Mod Control Panel");
 
-        //float closeButtonPos = barWidth - closeButtonSize - padding;
-        //ImGui::SameLine(closeButtonPos);
-        //ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-        //if (ImGui::Button("X", ImVec2(closeButtonSize, closeButtonSize))) {
-        //    WindowManager::MainInterface->IsOpen = false;
-        //}
-        //ImGui::PopStyleVar();
+        float closeButtonPos = barWidth - closeButtonSize - padding;
+        ImGui::SameLine(closeButtonPos);
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+        if (ImGui::Button("X", ImVec2(closeButtonSize, closeButtonSize))) {
+            WindowManager::MainInterface->IsOpen = false;
+            WindowManager::ConfigInterface->IsOpen = false;
+        }
+        ImGui::PopStyleVar();
 
         ImGui::EndMenuBar();
     }
@@ -186,3 +190,37 @@ void UI::AddToTree(UI::MenuTree* node, std::vector<std::string>& path, RenderFun
     }
 }
 
+
+void UI::RenderConfigWindow() {
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Appearing, ImVec2{0.5f, 0.5f});
+    ImGui::SetNextWindowSize(ImVec2{viewport->Size.x * 0.4f, viewport->Size.y * 0.4f}, ImGuiCond_Appearing);
+    ImGuiWindowFlags window_flags = 0;
+    window_flags |= ImGuiWindowFlags_NoCollapse;
+    window_flags |= ImGuiWindowFlags_MenuBar;
+    window_flags |= ImGuiWindowFlags_NoTitleBar;
+
+    if (ImGui::Begin("Settings##Settings", nullptr, window_flags)) {
+        if (ImGui::BeginMenuBar()) {
+            ImGui::Text("Settings");
+            float barWidth = ImGui::GetWindowWidth();
+            float barHeight = ImGui::GetFrameHeight();
+            float textWidth = ImGui::CalcTextSize("Mod Control Panel").x;
+
+            float closeButtonSize = barHeight;
+            float padding = ImGui::GetStyle().ItemSpacing.x;
+
+             float closeButtonPos = barWidth - closeButtonSize - padding;
+             ImGui::SameLine(closeButtonPos);
+             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+             if (ImGui::Button("X", ImVec2(closeButtonSize, closeButtonSize))) {
+                 WindowManager::ConfigInterface->IsOpen = false;
+             }
+             ImGui::PopStyleVar();
+            ImGui::EndMenuBar();
+        }
+
+
+        ImGui::End();
+    }
+}

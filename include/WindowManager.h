@@ -22,6 +22,7 @@ class WindowManager {
 public:
     static inline std::vector<Window*> Windows;
     static inline WindowInterface* MainInterface;
+    static inline WindowInterface* ConfigInterface;
     static bool IsAnyWindowOpen();
     static bool ShouldTheGameBePaused();
     static void Close();
