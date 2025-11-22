@@ -224,6 +224,7 @@ void UI::RenderConfigWindow() {
         if (ImGui::Combo("##MenuStyleCombo", &currentStyle, styleNames, IM_ARRAYSIZE(styleNames))) {
             Config::MenuStyle = static_cast<MenuStyle>(currentStyle);
             StyleManager::LoadStyle();
+            Config::Save();
         }
 
         ImGui::End();

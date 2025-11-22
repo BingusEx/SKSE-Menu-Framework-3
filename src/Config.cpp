@@ -65,3 +65,44 @@ void Config::Init() {
     delete ini;
     delete[] menuStyleStr;
 }
+
+void Config::Save() {
+    const auto ini = new Utils::Ini("SKSEMenuFramework.ini");
+
+    // General Section
+    ini->SetSection("General");
+    // Note: You'll need helper functions to convert key bindings and toggle modes back to strings
+    // For now, these are placeholders - implement KeyBindingToString() and ToggleModeToString()
+    // ini->SetString("ToggleKey", KeyBindingToString(ToggleKey).c_str());
+    // ini->SetString("ToggleMode", ToggleModeToString(ToggleMode).c_str());
+    // ini->SetString("ToggleKeyGamePad", KeyBindingToString(ToggleKeyGamePad).c_str());
+    // ini->SetString("ToggleModeGamePad", ToggleModeToString(ToggleModeGamePad).c_str());
+
+    ini->SetBool("FreezeTimeOnMenu", FreezeTimeOnMenu);
+    ini->SetBool("BlurBackgroundOnMenu", BlurBackgroundOnMenu);
+
+    const char* menuStyleStr = "SKYRIM";
+    if (Config::MenuStyle == MenuStyle::Modern) {
+        menuStyleStr = "MODERN";
+    } else if (Config::MenuStyle == MenuStyle::Classic) {
+        menuStyleStr = "DEFAULT";
+    }
+    ini->SetString("MenuStyle", menuStyleStr);
+
+    // Fonts Section
+    ini->SetSection("Fonts");
+    ini->SetString("PrimaryFont", PrimaryFont.c_str());
+    ini->SetBool("EnableChinese", EnableChinese);
+    ini->SetBool("EnableJapanese", EnableJapanese);
+    ini->SetBool("EnableKorean", EnableKorean);
+    ini->SetBool("EnableCyrillic", EnableCyrillic);
+    ini->SetBool("EnableThai", EnableThai);
+
+    // Save to file
+    if (!ini->Save()) {
+        // Log error if save fails
+        // logger::error("Failed to save configuration to INI file");
+    }
+
+    delete ini;
+}

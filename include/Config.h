@@ -9,6 +9,7 @@ enum MenuStyle {
 class Config {
     public:
     static void Init();
+    static void Save();
     static unsigned int ToggleKey;
     static uint8_t ToggleMode;
     static unsigned int ToggleKeyGamePad;
