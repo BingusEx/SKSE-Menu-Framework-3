@@ -11,3 +11,12 @@ bool WindowManager::IsAnyWindowOpen() {
                            [](Window* x) { return x->Interface->IsOpen.load(); });
     return it != WindowManager::Windows.end();
 }
+
+void WindowManager::Close() {
+    ResumeGame = false;
+    MainInterface->IsOpen = false;
+}
+
+void WindowManager::Open() {
+    MainInterface->IsOpen = true;
+}

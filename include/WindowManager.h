@@ -18,7 +18,10 @@ public:
 
 class WindowManager {
 public:
+    static inline bool ResumeGame = false;
     static inline std::vector<Window*> Windows;
     static inline WindowInterface* MainInterface;
     static bool IsAnyWindowOpen();
+    static void Close();
+    static void Open();
 };

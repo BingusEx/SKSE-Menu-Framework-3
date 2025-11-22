@@ -53,7 +53,7 @@ bool UI::Renderer::ProcessOpenClose(RE::InputEvent* const* evns) {
         if (a_event->GetIDCode() == temp_toggleKey) {
 
             if (WindowManager::MainInterface->IsOpen.load() && a_event->IsDown()) {
-                WindowManager::MainInterface->IsOpen = false;
+                WindowManager::Close();
             } else {
 
                 if (temp_device == RE::INPUT_DEVICE::kKeyboard) {
@@ -62,7 +62,7 @@ bool UI::Renderer::ProcessOpenClose(RE::InputEvent* const* evns) {
                     if (Config::ToggleMode == 0 && a_event->IsDown() ||
                         Config::ToggleMode == 1 && a_event->HeldDuration() > 0.4f||
                         Config::ToggleMode == 2 && DoublePressDetectorKeyboard && a_event->IsDown()) {
-                        WindowManager::MainInterface->IsOpen = true;
+                        WindowManager::Open();
                         return true;
                     };
                 } else {
@@ -70,7 +70,7 @@ bool UI::Renderer::ProcessOpenClose(RE::InputEvent* const* evns) {
                     if (Config::ToggleModeGamePad == 0 && a_event->IsDown() ||
                         Config::ToggleModeGamePad == 1 && a_event->HeldDuration() > 0.4f ||
                         Config::ToggleModeGamePad == 2 && DoublePressDetectorGamepad && a_event->IsDown()) {
-                        WindowManager::MainInterface->IsOpen = true;
+                        WindowManager::Open();
                         return true;
                     };
                 }
@@ -79,7 +79,7 @@ bool UI::Renderer::ProcessOpenClose(RE::InputEvent* const* evns) {
         }
         if (a_event->GetIDCode() == REX::W32::DIK_ESCAPE && temp_device == RE::INPUT_DEVICE::kKeyboard) {
             bool hasChanged = WindowManager::MainInterface->IsOpen.load();
-            WindowManager::MainInterface->IsOpen = false;
+            WindowManager::Close();
             return hasChanged;
         }
     }

@@ -44,7 +44,7 @@ void Hooks::ProcessInputQueueHook::thunk(RE::BSTEventSource<RE::InputEvent*>* a_
         constexpr RE::InputEvent* const dummy[] = {nullptr};
         originalFunction(a_dispatcher, dummy);
     } else {
-        if (WindowManager::IsAnyWindowOpen()) {
+        if (WindowManager::IsAnyWindowOpen() && !WindowManager::ResumeGame) {
             constexpr RE::InputEvent* const dummy[] = {nullptr};
             originalFunction(a_dispatcher, dummy);
             UI::TranslateInputEvent(a_event);
