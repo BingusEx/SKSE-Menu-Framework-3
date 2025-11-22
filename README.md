@@ -27,7 +27,7 @@ inline Model::InputEvent* AddInputEvent(Model::InputEventCallback callback)
 Example of registering a user input hook
 
 ```cpp
-    SKSEMenuFramework::AddInputEvent(Example5::OnInput);
+SKSEMenuFramework::AddInputEvent(Example5::OnInput);
 ```
 
 Example of defining a user input callback function
