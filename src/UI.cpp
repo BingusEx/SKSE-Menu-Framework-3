@@ -4,7 +4,7 @@
 #include "Renderer.h"
 #include "StyleManager.h"
 #include "Application.h"
-
+#include "SKSEMenuFramework.h"
 static ImGuiTextFilter filter;
 
 UI::MenuTree* UI::RootMenu = new UI::MenuTree();
@@ -75,7 +75,8 @@ void __stdcall UI::RenderMenuWindow() {
     ImGui::Begin("#MCPMainWindow", nullptr, window_flags);
 
     if (ImGui::BeginMenuBar()) {
-        if (ImGui::BeginMenu("Options")) {
+        PushSolid();
+        if (ImGui::BeginMenu("Options \uf0d7")) {
             if (ImGui::MenuItem("Resume Game")) {
                 WindowManager::MainInterface->PauseGame = false;
                 WindowManager::ConfigInterface->PauseGame = false;
@@ -85,6 +86,7 @@ void __stdcall UI::RenderMenuWindow() {
             }
             ImGui::EndMenu();
         }
+        Pop();
 
         float barWidth = ImGui::GetWindowWidth();
         float barHeight = ImGui::GetFrameHeight();
@@ -244,6 +246,19 @@ void UI::RenderConfigWindow() {
             ImGui::PopStyleVar();
             ImGui::EndMenuBar();
         }
+
+        float windowWidth = ImGui::GetContentRegionAvail().x;
+        float contentWidth = windowWidth * 0.8f;
+        float offsetX = (windowWidth - contentWidth) * 0.5f;
+
+        if (offsetX > 0) {
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
+        }
+
+        ImGui::BeginGroup();
+        ImGui::PushItemWidth(contentWidth);
+    
+
         const char* styleNames[] = {"Skyrim", "Modern", "Classic"};
         int currentStyle = static_cast<int>(Config::MenuStyle);
         ImGui::Text("Menu Style:");
