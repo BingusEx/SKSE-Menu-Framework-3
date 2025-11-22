@@ -4,6 +4,7 @@
 #include "UI.h"
 #include "SKSEMenuFramework.h"
 #include "Licence.h"
+#include "Translations.h"
 
 SKSEPluginLoad(const SKSE::LoadInterface* skse) {
     SetupLog();
@@ -17,6 +18,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse) {
     WindowManager::ConfigInterface = AddWindow(UI::RenderConfigWindow);
     WindowManager::MainInterface->PauseGame = true;
     WindowManager::ConfigInterface->PauseGame = true;
+    Translations::Install();
     Hooks::Install();
     return true;
 }

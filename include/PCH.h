@@ -11,3 +11,7 @@ using FormID = RE::FormID;
 using RefID = RE::FormID;
 
 const RefID player_refid = 20;
+
+#define IF_FIND(array, value, it) \
+    auto it = array.find(value);  \
+    if (it != array.end())

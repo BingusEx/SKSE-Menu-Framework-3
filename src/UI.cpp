@@ -4,6 +4,7 @@
 #include "Renderer.h"
 #include "Application.h"
 #include "SKSEMenuFramework.h"
+#include "Translations.h"
 static ImGuiTextFilter filter;
 
 UI::MenuTree* UI::RootMenu = new UI::MenuTree();
@@ -75,12 +76,12 @@ void __stdcall UI::RenderMenuWindow() {
 
     if (ImGui::BeginMenuBar()) {
         PushSolid();
-        if (ImGui::BeginMenu("Options \uf0d7")) {
-            if (ImGui::MenuItem("Resume Game")) {
+        if (ImGui::BeginMenu(Translations::Get("Options"))) {
+            if (ImGui::MenuItem(Translations::Get("Options.ResumeGame"))) {
                 WindowManager::MainInterface->PauseGame = false;
                 WindowManager::ConfigInterface->PauseGame = false;
             }
-            if (ImGui::MenuItem("Settings")) {
+            if (ImGui::MenuItem(Translations::Get("Options.OpenSettings"))) {
                 WindowManager::ConfigInterface->IsOpen = true;
             }
             ImGui::EndMenu();
@@ -89,7 +90,7 @@ void __stdcall UI::RenderMenuWindow() {
 
         float barWidth = ImGui::GetWindowWidth();
         float barHeight = ImGui::GetFrameHeight();
-        float textWidth = ImGui::CalcTextSize("Mod Control Panel").x;
+        float textWidth = ImGui::CalcTextSize(Translations::Get("ModControlPanel")).x;
 
         float closeButtonSize = barHeight;
         float padding = ImGui::GetStyle().ItemSpacing.x;
@@ -97,15 +98,17 @@ void __stdcall UI::RenderMenuWindow() {
         float availableWidth = barWidth - closeButtonSize - padding;
         float pos = (availableWidth * 0.5f) - (textWidth * 0.5f);
         ImGui::SameLine(pos);
-        ImGui::Text("Mod Control Panel");
+        ImGui::Text(Translations::Get("ModControlPanel"));
 
         float closeButtonPos = barWidth - closeButtonSize - padding;
         ImGui::SameLine(closeButtonPos);
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-        if (ImGui::Button("X", ImVec2(closeButtonSize, closeButtonSize))) {
+        PushSolid();
+        if (ImGui::Button("\u58", ImVec2(closeButtonSize, closeButtonSize))) {
             WindowManager::MainInterface->IsOpen = false;
             WindowManager::ConfigInterface->IsOpen = false;
         }
+        Pop();
         ImGui::PopStyleVar();
 
         ImGui::EndMenuBar();
@@ -223,12 +226,13 @@ void UI::RenderConfigWindow() {
     window_flags |= ImGuiWindowFlags_MenuBar;
     window_flags |= ImGuiWindowFlags_NoTitleBar;
 
-    if (ImGui::Begin("Settings##Settings", nullptr, window_flags)) {
+    if (ImGui::Begin("Settings##Window", nullptr,
+                     window_flags)) {
         if (ImGui::BeginMenuBar()) {
-            ImGui::Text("Settings");
+            ImGui::Text(Translations::Get("Settings.Title"));
             float barWidth = ImGui::GetWindowWidth();
             float barHeight = ImGui::GetFrameHeight();
-            float textWidth = ImGui::CalcTextSize("Mod Control Panel").x;
+            float textWidth = ImGui::CalcTextSize(Translations::Get("Settings.Title")).x;
 
             float closeButtonSize = barHeight;
             float padding = ImGui::GetStyle().ItemSpacing.x;
@@ -236,9 +240,11 @@ void UI::RenderConfigWindow() {
             float closeButtonPos = barWidth - closeButtonSize - padding;
             ImGui::SameLine(closeButtonPos);
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-            if (ImGui::Button("X", ImVec2(closeButtonSize, closeButtonSize))) {
+            PushSolid();
+            if (ImGui::Button("\u58", ImVec2(closeButtonSize, closeButtonSize))) {
                 WindowManager::ConfigInterface->IsOpen = false;
             }
+            Pop();
             ImGui::PopStyleVar();
             ImGui::EndMenuBar();
         }
@@ -263,22 +269,22 @@ void UI::RenderConfigWindow() {
             styleNames.push_back(s.c_str());
         }
 
-        ImGui::Text("Menu Style:");
+        ImGui::Text(Translations::Get("Settings.MenuStyle"));
         if (ImGui::Combo("##MenuStyleCombo", &Config::MenuStyle, styleNames.data(), styleNames.size())) {
             Config::LoadStyle();
             Config::Save();
         }
-        if (ToggleButton("Freeze Time", &Config::FreezeTimeOnMenu)) {
+        if (ToggleButton(Translations::Get("Settings.FreezeTime"), &Config::FreezeTimeOnMenu)) {
             Config::Save();
         }
 
-        if (ToggleButton("Blur Background", &Config::BlurBackgroundOnMenu)) {
+        if (ToggleButton(Translations::Get("Settings.BlurBackground"), &Config::BlurBackgroundOnMenu)) {
             Config::Save();
         }
 
         const char* togleModeNames[] = {"SINGLEPRESS", "HOLD", "DOUBLEPRESS"};
         int currentTogleMode = static_cast<int>(Config::ToggleMode);
-        ImGui::Text("Toggle Mode (Keyboard):");
+        ImGui::Text(Translations::Get("Settings.ToggleMode.Keyboard"));
         if (ImGui::Combo("##ToggleModeCombo", &currentTogleMode, togleModeNames, IM_ARRAYSIZE(togleModeNames))) {
             Config::ToggleMode = currentTogleMode;
             Config::Save();
@@ -286,7 +292,7 @@ void UI::RenderConfigWindow() {
 
         ImGui::Separator();
 
-        ImGui::Text("Toggle Key (Keyboard):");
+        ImGui::Text(Translations::Get("Settings.ToggleKey.Keyboard"));
         std::string currentKeyName = GetKeyName(Config::ToggleKey, RE::INPUT_DEVICES::kKeyboard);
         if (ImGui::BeginCombo("##ToggleKeyKeyboard", currentKeyName.c_str())) {
             const std::vector<std::pair<std::string, int>> keyboardKeys = {
@@ -333,14 +339,14 @@ void UI::RenderConfigWindow() {
         ImGui::Separator();
 
         int currentTogleModeGamepad = static_cast<int>(Config::ToggleModeGamePad);
-        ImGui::Text("Toggle Mode (Gamepad):");
+        ImGui::Text(Translations::Get("Settings.ToggleMode.Gamepad"));
         if (ImGui::Combo("##ToggleModeComboGAmepad", &currentTogleModeGamepad, togleModeNames,
                          IM_ARRAYSIZE(togleModeNames))) {
             Config::ToggleModeGamePad = currentTogleModeGamepad;
             Config::Save();
         }
 
-        ImGui::Text("Toggle Key (Gamepad):");
+        ImGui::Text(Translations::Get("Settings.ToggleKey.Gamepad"));
         std::string currentButtonName = GetKeyName(Config::ToggleKeyGamePad, RE::INPUT_DEVICES::kGamepad);
         if (ImGui::BeginCombo("##ToggleKeyGamepad", currentButtonName.c_str())) {
             const std::vector<std::pair<std::string, int>> gamepadButtons = {
