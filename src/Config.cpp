@@ -1,6 +1,7 @@
 ﻿#include "Config.h"
 #include "Application.h"
 #include "Theme.h"
+#include "Utils.h"
 unsigned int Config::ToggleKey = 0x3B;
 uint8_t Config::ToggleMode = 0;
 unsigned int Config::ToggleKeyGamePad = 0;
@@ -16,25 +17,9 @@ bool Config::EnableKorean = false;
 bool Config::EnableCyrillic = false;
 bool Config::EnableThai = false;
 
-char* toUpperCase(const char* str) {
-    if (str == nullptr) {
-        return nullptr;
-    }
-
-    char* upper_str = new char[strlen(str) + 1];
-    if (upper_str == nullptr) {
-        return nullptr; 
-    }
-    for (int i = 0; str[i] != '\0'; i++) {
-        upper_str[i] = std::toupper((unsigned char)str[i]);
-    }
-    upper_str[strlen(str)] = '\0';
-
-    return upper_str;
-}
 
 void Config::Init() {
-	const auto ini = new Utils::Ini("SKSEMenuFramework.ini");
+	const auto ini = new Ini("SKSEMenuFramework.ini");
     ini->SetSection("General");
 
     ToggleKey = GetKeyBinding(ini->GetString("ToggleKey", "f1"));
@@ -45,11 +30,10 @@ void Config::Init() {
 
     FreezeTimeOnMenu = ini->GetBool("FreezeTimeOnMenu", true);
     BlurBackgroundOnMenu = ini->GetBool("BlurBackgroundOnMenu", true);
-    auto menuStyleStr = toUpperCase(ini->GetString("MenuStyle", "SKYRIM"));
+    auto menuStyleStr = Utils::toUpperCase(ini->GetString("MenuStyle", "skyrimDefault"));
 
     MenuStyles = Theme::GetJsonFiles();
-
-    //LoadStyle();
+    Config::MenuStyle = Utils::indexOf(Config::MenuStyles, Utils::toUpperCase(menuStyleStr));
 
     ini->SetSection("Fonts");  
     PrimaryFont = ini->GetString("PrimaryFont", "MainFont.ttf");
@@ -66,7 +50,7 @@ void Config::Init() {
 }
 
 void Config::Save() {
-    const auto ini = new Utils::Ini("SKSEMenuFramework.ini");
+    const auto ini = new Ini("SKSEMenuFramework.ini");
 
     // General Section
     ini->SetSection("General");
@@ -123,6 +107,8 @@ void Config::Save() {
     delete ini;
 }
 
-void Config::LoadStyle() { Theme::LoadJsonStyle(MenuStyles[MenuStyle]);
+void Config::LoadStyle() {
+    
+    Theme::LoadJsonStyle(MenuStyles[MenuStyle]);
 
 }

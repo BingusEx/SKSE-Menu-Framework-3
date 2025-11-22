@@ -3,7 +3,7 @@
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include "Theme.h"
-
+#include "Utils.h"
 static ImVec4 HexToImVec4(const std::string& hex) {
     unsigned int v = 0;
     std::stringstream ss;
@@ -23,7 +23,7 @@ std::vector<std::string> Theme::GetJsonFiles() {
         if (entry.is_regular_file()) {
             auto path = entry.path();
             if (path.extension() == ".json") {
-                out.push_back(path.stem().string());
+                out.push_back(Utils::toUpperCase(path.stem().string().c_str()));
             }
         }
     }
