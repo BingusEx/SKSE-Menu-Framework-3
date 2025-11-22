@@ -4,6 +4,10 @@ Mods using the old header should be fully compatible; however, if you want to us
 
 # New Features Added To The API
 
+Video demonstration of the update
+
+[![Video Demonstration of the update](https://img.youtube.com/vi/ZNCh1pje3qc/0.jpg)](https://www.youtube.com/watch?v=ZNCh1pje3qc)
+
 ## Is any window open API
 
 If the result is true, the player is currently controlling the game; otherwise, it is false
