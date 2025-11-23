@@ -36,7 +36,20 @@ void Hooks::ProcessInputQueueHook::install() {
     originalFunction = trampoline.write_call<5>(
         REL::RelocationID(67315, 68617, 0xC519E0).address() + REL::Relocate(0x7B, 0x7B, 0x81), thunk);
 }
-
+void DisableImGuiInput() {
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+    io.ConfigFlags |= ImGuiConfigFlags_NavNoCaptureKeyboard;
+    io.ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags &= ~ImGuiConfigFlags_NavEnableGamepad;
+}
+void EnableImGuiInput() {
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+    io.ConfigFlags &= ~ImGuiConfigFlags_NavNoCaptureKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+}
 void Hooks::ProcessInputQueueHook::thunk(RE::BSTEventSource<RE::InputEvent*>* a_dispatcher,
                                       RE::InputEvent* const* a_event) {
     bool isInputCapturedByOpenClose = UI::Renderer::ProcessOpenClose(a_event);
@@ -50,8 +63,10 @@ void Hooks::ProcessInputQueueHook::thunk(RE::BSTEventSource<RE::InputEvent*>* a_
         if (WindowManager::ShouldTheGameBePaused()) {
             constexpr RE::InputEvent* const dummy[] = {nullptr};
             originalFunction(a_dispatcher, dummy);
+            EnableImGuiInput();
             UI::TranslateInputEvent(a_event);
         } else {
+            DisableImGuiInput();
             originalFunction(a_dispatcher, a_event);
         }
     }
