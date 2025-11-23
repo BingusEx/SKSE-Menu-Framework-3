@@ -2,6 +2,25 @@
 
 Mods using the old header should be fully compatible; however, if you want to use the new features, you need to update the [header file](https://github.com/QTR-Modding/SKSE-Menu-Framework-3/blob/master/resources/SKSEMenuFramework.h)
 
+# New features to users
+
+## Translation
+
+Thanks to blnkxin, now it is possible to translate this mod and mods that use the mod control panel to Chinese and other languages with all sorts of character ranges.
+Now the mod is fully translatable; I'll soon post both a Brazilian Portuguese and a Chinese translation.
+
+## Themes
+
+Now it is possible to create custom themes by simply placing JSON files with the theme specification into the Data\\SKSE\\plugins\\SKSEMenuFrameworkThemes folder.
+
+## Configration
+
+The mod now has its own configuration menu, which allows you to customize many settings while in the game; all changes are persisted in the config file. You can access the menu on Options/Open Settings
+
+## Unpause
+
+Now it is possible for modders to create menus that do not pause the game, and also it is now possible to unpause the mod control panel on Options/Resume Game.
+
 # New Features Added To The API
 
 Video demonstration of the update
