@@ -192,19 +192,35 @@ void UI::AddToTree(UI::MenuTree* node, std::vector<std::string>& path, RenderFun
 bool ToggleButton(const char* label, bool* v) {
     ImVec2 p = ImGui::GetCursorScreenPos();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
-
     float height = ImGui::GetFrameHeight();
     float width = height * 1.8f;
     float radius = height * 0.5f;
 
-    ImGui::InvisibleButton(label, ImVec2(width, height));
-    bool clicked = ImGui::IsItemClicked();
-    if (clicked) *v = !*v;
+    // Use a unique ID for the button
+    ImGui::PushID(label);
+
+    // Use Selectable instead of InvisibleButton for gamepad navigation
+    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0, 0, 0, 0));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0, 0, 0, 0));
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0, 0, 0, 0));
+
+    bool clicked = ImGui::Selectable("##toggle", false, 0, ImVec2(width, height));
+
+    ImGui::PopStyleColor(3);
+    ImGui::PopID();
+
+    if (clicked) {
+        *v = !*v;
+    }
+
+    // Draw the toggle on top of the selectable
+    ImVec2 p_min = ImVec2(p.x, p.y);
+    ImVec2 p_max = ImVec2(p.x + width, p.y + height);
 
     float t = *v ? 1.0f : 0.0f;
     ImU32 col_bg = ImGui::GetColorU32(*v ? ImGuiCol_ButtonActive : ImGuiCol_ButtonActive);
 
-    draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height), col_bg, height * 0.5f);
+    draw_list->AddRectFilled(p_min, p_max, col_bg, height * 0.5f);
     draw_list->AddCircleFilled(ImVec2(p.x + radius + t * (width - radius * 2.0f), p.y + radius), radius - 1.5f,
                                IM_COL32(255, 255, 255, 255));
 
@@ -213,7 +229,6 @@ bool ToggleButton(const char* label, bool* v) {
 
     return clicked;
 }
-
 
 void UI::RenderConfigWindow() {
     ImGuiViewport* viewport = ImGui::GetMainViewport();
