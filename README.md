@@ -31,7 +31,7 @@ Video demonstration of the update
 
 ## Is any window open API
 
-If the result is true, the player is currently controlling the game; otherwise, it is false
+If returns true, the player is currently controlling the game; otherwise, it returns false
 
 ```cpp
 bool IsAnyBlockingWindowOpened()
