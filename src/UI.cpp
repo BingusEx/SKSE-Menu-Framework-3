@@ -293,7 +293,7 @@ void UI::RenderConfigWindow() {
             Config::Save();
         }
 
-        const char* togleModeNames[] = {"SINGLEPRESS", "HOLD", "DOUBLEPRESS"};
+        const char* togleModeNames[] = {"SINGLEPRESS", "HOLD", "DOUBLEPRESS", "OFF"};
         int currentTogleMode = static_cast<int>(Config::ToggleMode);
         ImGui::Text(Translations::Get("Settings.ToggleMode.Keyboard"));
         if (ImGui::Combo("##ToggleModeCombo", &currentTogleMode, togleModeNames, IM_ARRAYSIZE(togleModeNames))) {
