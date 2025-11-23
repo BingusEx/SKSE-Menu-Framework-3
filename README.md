@@ -15,7 +15,9 @@ Now it is possible to create custom themes by simply placing JSON files with the
 
 ## Configration
 
-The mod now has its own configuration menu, which allows you to customize many settings while in the game; all changes are persisted in the config file. You can access the menu on Options/Open Settings
+The mod now has its own configuration menu, which allows you to customize many settings while in the game; all changes are persisted in the config file. You can access the menu on Options/Open Settings.
+
+If you are on a gamepad you can select this menu by pressing X
 
 ## Unpause
 
