@@ -161,7 +161,6 @@ void Hooks::DXGIPresentHook::thunk(std::uint32_t a_timer) {
     }
 
 
-    GameLock::SetState(GameLock::State::Locked);
 
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
@@ -181,6 +180,7 @@ void Hooks::DXGIPresentHook::thunk(std::uint32_t a_timer) {
             io.MouseDrawCursor = false;
             GameLock::SetState(GameLock::State::Resume);
         } else {
+            GameLock::SetState(GameLock::State::Locked);
             io.MouseDrawCursor = true;
         }
 
