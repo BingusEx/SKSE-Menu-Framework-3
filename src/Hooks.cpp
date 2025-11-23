@@ -186,6 +186,8 @@ void Hooks::DXGIPresentHook::thunk(std::uint32_t a_timer) {
 
         UI::Renderer::RenderWindows();
     } else {
+        auto& io = ImGui::GetIO();
+        io.MouseDrawCursor = false;
         GameLock::SetState(GameLock::State::Unlocked);
     }
     ImGui::EndFrame();
