@@ -111,6 +111,20 @@ void __stdcall UI::Example5::RenderOverlay() {
     ImGui::ImDrawListManager::AddCircle(drawList, center, 100, IM_COL32(255, 0, 0, 255), 100, 10);
 }
 ```
+## Non blocking window
+
+To create a non blocking window you can simply pass false to the second argument of the add window function
+
+```cpp
+UI::Example5::NonPausingWindow = SKSEMenuFramework::AddWindow(Example5::RenderWindow, false);
+```
+
+Or you can manually set the PauseGame property whenever you want a window to be controllable or not
+
+```cpp
+UI::Example5::NonPausingWindow->PauseGame = true;
+```
+
 ## Load Texture File
 
 SVG, DDS, and most conventional image files are supported
