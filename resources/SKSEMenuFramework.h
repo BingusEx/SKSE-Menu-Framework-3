@@ -31,11 +31,11 @@ namespace SKSEMenuFramework {
 
             inline std::string key;
         }
-    
+
         class WindowInterface {
         public:
             std::atomic<bool> IsOpen{false};
-            std::atomic<bool> PauseGame{true};
+            std::atomic<bool> BlockUserInput{true};
         };
         typedef void(__stdcall* RenderFunction)();
         typedef bool(__stdcall* InputEventCallback)(RE::InputEvent*);
@@ -44,17 +44,18 @@ namespace SKSEMenuFramework {
         using AddWindowFunction = Model::WindowInterface* (*)(RenderFunction);
         using AddSectionItemFunction = void (*)(const char* path, RenderFunction rendererFunction);
 
-        using RegisterInputEventFuction = int64_t(*)(InputEventCallback callback);
-        using UnregisterInputEventFuction = void(*)(uint64_t id);
+        using RegisterInputEventFuction = int64_t (*)(InputEventCallback callback);
+        using UnregisterInputEventFuction = void (*)(uint64_t id);
 
-        using RegisterHudElementFuction = int64_t(*)(HudElementCallback callback);
-        using UnregisterHudElementFuction = void(*)(uint64_t id);
-        using IsAnyBlockingWindowOpenedFuction = bool(*)();
-        using SetWindowsPauseGameFuction = void(*)(bool pause);
-        using LoadTextureFuction = ImTextureID(*)(const char* texturePath, ImVec2* size);
+        using RegisterHudElementFuction = int64_t (*)(HudElementCallback callback);
+        using UnregisterHudElementFuction = void (*)(uint64_t id);
+        using IsAnyBlockingWindowOpenedFuction = bool (*)();
+        using SetWindowsPauseGameFuction = void (*)(bool pause);
+        using LoadTextureFuction = ImTextureID (*)(const char* texturePath, ImVec2* size);
 
-         class InputEvent {
+        class InputEvent {
             uint64_t id;
+
         public:
             InputEvent(InputEventCallback callback) {
                 static auto func = Internal::GetFunction<RegisterInputEventFuction>("RegisterInpoutEvent");
@@ -70,30 +71,26 @@ namespace SKSEMenuFramework {
             }
         };
 
-         class HudElement {
-             uint64_t id;
-         public:
-             HudElement(HudElementCallback callback) {
-                 static auto func = Internal::GetFunction<RegisterHudElementFuction>("RegisterHudElement");
-                 if (func) {
-                     id = func(callback);
-                 }
-             }
+        class HudElement {
+            uint64_t id;
 
-             ~HudElement() {
-                 static auto func = Internal::GetFunction<UnregisterHudElementFuction>("UnregisterHudElement");
-                 if (func) {
-                     func(id);
-                 }
-             }
-         };
+        public:
+            HudElement(HudElementCallback callback) {
+                static auto func = Internal::GetFunction<RegisterHudElementFuction>("RegisterHudElement");
+                if (func) {
+                    id = func(callback);
+                }
+            }
+
+            ~HudElement() {
+                static auto func = Internal::GetFunction<UnregisterHudElementFuction>("UnregisterHudElement");
+                if (func) {
+                    func(id);
+                }
+            }
+        };
 
     }
-
-
-
-
-
 
     inline void AddSectionItem(std::string menu, Model::RenderFunction rendererFunction) {
         static auto func = Model::Internal::GetFunction<Model::AddSectionItemFunction>("AddSectionItem");
@@ -105,32 +102,34 @@ namespace SKSEMenuFramework {
         static auto func = Model::Internal::GetFunction<Model::AddWindowFunction>("AddWindow");
         if (func) {
             auto result = func(rendererFunction);
-            result->PauseGame = doesWindowPauseGame;
+            result->BlockUserInput = doesWindowPauseGame;
             return result;
         }
         return nullptr;
     }
-    inline  Model::InputEvent* AddInputEvent(Model::InputEventCallback callback) { return new Model::InputEvent(callback); }
-    inline Model::HudElement* AddHudElement(Model::HudElementCallback callback) { return new Model::HudElement(callback); }
+    inline Model::InputEvent* AddInputEvent(Model::InputEventCallback callback) {
+        return new Model::InputEvent(callback);
+    }
+    inline Model::HudElement* AddHudElement(Model::HudElementCallback callback) {
+        return new Model::HudElement(callback);
+    }
 
     inline bool IsAnyBlockingWindowOpened() {
-        static auto func = Model::Internal::GetFunction<Model::IsAnyBlockingWindowOpenedFuction>("IsAnyBlockingWindowOpened");
+        static auto func =
+            Model::Internal::GetFunction<Model::IsAnyBlockingWindowOpenedFuction>("IsAnyBlockingWindowOpened");
         if (func) {
             return func();
         }
         return false;
     }
 
-    
     inline ImTextureID LoadTexture(std::string texturePath, ImVec2 size = {0, 0}) {
         static auto func = Model::Internal::GetFunction<Model::LoadTextureFuction>("LoadTexture");
         if (func) {
-            return func(texturePath.c_str(), &size); 
+            return func(texturePath.c_str(), &size);
         }
         return 0;
     }
-
-
 
     inline void SetSection(std::string key) { Model::Internal::key = key; }
 }
@@ -173,26 +172,27 @@ namespace FontAwesome {
 #pragma region Structs
 
 namespace ImGuiMCP {
-    #ifndef IM_COL32_R_SHIFT
+#ifndef IM_COL32_R_SHIFT
     #ifdef IMGUI_USE_BGRA_PACKED_COLOR
-    #define IM_COL32_R_SHIFT    16
-    #define IM_COL32_G_SHIFT    8
-    #define IM_COL32_B_SHIFT    0
-    #define IM_COL32_A_SHIFT    24
-    #define IM_COL32_A_MASK     0xFF000000
+        #define IM_COL32_R_SHIFT 16
+        #define IM_COL32_G_SHIFT 8
+        #define IM_COL32_B_SHIFT 0
+        #define IM_COL32_A_SHIFT 24
+        #define IM_COL32_A_MASK 0xFF000000
     #else
-    #define IM_COL32_R_SHIFT    0
-    #define IM_COL32_G_SHIFT    8
-    #define IM_COL32_B_SHIFT    16
-    #define IM_COL32_A_SHIFT    24
-    #define IM_COL32_A_MASK     0xFF000000
+        #define IM_COL32_R_SHIFT 0
+        #define IM_COL32_G_SHIFT 8
+        #define IM_COL32_B_SHIFT 16
+        #define IM_COL32_A_SHIFT 24
+        #define IM_COL32_A_MASK 0xFF000000
     #endif
-    #endif
-    #define IM_COL32(R,G,B,A)    (((ImU32)(A)<<IM_COL32_A_SHIFT) | ((ImU32)(B)<<IM_COL32_B_SHIFT) | ((ImU32)(G)<<IM_COL32_G_SHIFT) | ((ImU32)(R)<<IM_COL32_R_SHIFT))
-    #define IM_COL32_WHITE       IM_COL32(255,255,255,255)  // Opaque white = 0xFFFFFFFF
-    #define IM_COL32_BLACK       IM_COL32(0,0,0,255)        // Opaque black
-    #define IM_COL32_BLACK_TRANS IM_COL32(0,0,0,0)          // Transparent black = 0x00000000
-
+#endif
+#define IM_COL32(R, G, B, A)                                                                                  \
+    (((ImU32)(A) << IM_COL32_A_SHIFT) | ((ImU32)(B) << IM_COL32_B_SHIFT) | ((ImU32)(G) << IM_COL32_G_SHIFT) | \
+     ((ImU32)(R) << IM_COL32_R_SHIFT))
+#define IM_COL32_WHITE IM_COL32(255, 255, 255, 255)  // Opaque white = 0xFFFFFFFF
+#define IM_COL32_BLACK IM_COL32(0, 0, 0, 255)        // Opaque black
+#define IM_COL32_BLACK_TRANS IM_COL32(0, 0, 0, 0)    // Transparent black = 0x00000000
 
     typedef struct ImDrawChannel ImDrawChannel;
     typedef struct ImDrawCmd ImDrawCmd;
@@ -4527,14 +4527,15 @@ namespace ImGuiMCP {
             return func();
         }
         inline void Image(ImTextureID user_texture_id, const ImVec2 image_size, const ImVec2 uv0 = ImVec2(0, 0),
-                          const ImVec2 uv1= ImVec2(1, 1), const ImVec4 tint_col = ImVec4(1, 1, 1, 1),
+                          const ImVec2 uv1 = ImVec2(1, 1), const ImVec4 tint_col = ImVec4(1, 1, 1, 1),
                           const ImVec4 border_col = ImVec4(0, 0, 0, 0)) {
             using func_t = void (*)(ImTextureID, const ImVec2, const ImVec2, const ImVec2, const ImVec4, const ImVec4);
             func_t func = reinterpret_cast<func_t>(GetProcAddress(menuFramework, "igImage"));
             return func(user_texture_id, image_size, uv0, uv1, tint_col, border_col);
         }
         inline bool ImageButton(const char* str_id, ImTextureID user_texture_id, const ImVec2 image_size,
-                                const ImVec2 uv0 = ImVec2(0, 0), const ImVec2 uv1 = ImVec2(1, 1), const ImVec4 bg_col= ImVec4(0, 0, 0, 0), const ImVec4 tint_col = ImVec4(1, 1, 1, 1)) {
+                                const ImVec2 uv0 = ImVec2(0, 0), const ImVec2 uv1 = ImVec2(1, 1),
+                                const ImVec4 bg_col = ImVec4(0, 0, 0, 0), const ImVec4 tint_col = ImVec4(1, 1, 1, 1)) {
             using func_t = bool (*)(const char*, ImTextureID, const ImVec2, const ImVec2, const ImVec2, const ImVec4,
                                     const ImVec4);
             func_t func = reinterpret_cast<func_t>(GetProcAddress(menuFramework, "igImageButton"));
@@ -6604,14 +6605,14 @@ namespace ImGuiMCP {
                 return func(self, center, radius, col, rot, num_segments);
             }
             inline void AddText(ImDrawList* self, const ImVec2 pos, ImU32 col, const char* text_begin,
-                                     const char* text_end = 0) {
+                                const char* text_end = 0) {
                 using func_t = void (*)(ImDrawList*, const ImVec2, ImU32, const char*, const char*);
                 func_t func = reinterpret_cast<func_t>(GetProcAddress(menuFramework, "ImDrawList_AddText_Vec2"));
                 return func(self, pos, col, text_begin, text_end);
             }
-            inline void AddText(ImDrawList* self, const ImFont* font, float font_size, const ImVec2 pos,
-                                        ImU32 col, const char* text_begin, const char* text_end = 0, float wrap_width = 0.0f,
-                                        const ImVec4* cpu_fine_clip_rect = nullptr) {
+            inline void AddText(ImDrawList* self, const ImFont* font, float font_size, const ImVec2 pos, ImU32 col,
+                                const char* text_begin, const char* text_end = 0, float wrap_width = 0.0f,
+                                const ImVec4* cpu_fine_clip_rect = nullptr) {
                 using func_t = void (*)(ImDrawList*, const ImFont*, float, const ImVec2, ImU32, const char*,
                                         const char*, float, const ImVec4*);
                 func_t func = reinterpret_cast<func_t>(GetProcAddress(menuFramework, "ImDrawList_AddText_FontPtr"));

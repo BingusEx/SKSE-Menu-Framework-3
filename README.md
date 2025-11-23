@@ -119,10 +119,9 @@ To create a non blocking window you can simply pass false to the second argument
 UI::Example5::NonPausingWindow = SKSEMenuFramework::AddWindow(Example5::RenderWindow, false);
 ```
 
-Or you can manually set the PauseGame property whenever you want a window to be controllable or not
-
+You can also change it later
 ```cpp
-UI::Example5::NonPausingWindow->PauseGame = true;
+UI::Example5::NonPausingWindow->BlockUserInput = true;
 ```
 
 ## Load Texture File

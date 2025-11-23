@@ -15,13 +15,13 @@ bool WindowManager::IsAnyWindowOpen() {
 
 bool WindowManager::ShouldTheGameBePaused() {
     auto it = std::find_if(WindowManager::Windows.begin(), WindowManager::Windows.end(),
-                           [](Window* x) { return x->Interface->IsOpen.load() && x->Interface->PauseGame.load();  });
+                           [](Window* x) { return x->Interface->IsOpen.load() && x->Interface->BlockUserInput.load();  });
     return it != WindowManager::Windows.end();
 }
 
 void WindowManager::Close() {
-    WindowManager::MainInterface->PauseGame = true;
-    WindowManager::ConfigInterface->PauseGame = true;
+    WindowManager::MainInterface->BlockUserInput = true;
+    WindowManager::ConfigInterface->BlockUserInput = true;
     ConfigInterface->IsOpen = false;
     MainInterface->IsOpen = false;
 }

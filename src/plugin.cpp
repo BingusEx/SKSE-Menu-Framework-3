@@ -16,8 +16,8 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse) {
     Config::Init();
     WindowManager::MainInterface = AddWindow(UI::RenderMenuWindow);
     WindowManager::ConfigInterface = AddWindow(UI::RenderConfigWindow);
-    WindowManager::MainInterface->PauseGame = true;
-    WindowManager::ConfigInterface->PauseGame = true;
+    WindowManager::MainInterface->BlockUserInput = true;
+    WindowManager::ConfigInterface->BlockUserInput = true;
     Translations::Install();
     Hooks::Install();
     return true;

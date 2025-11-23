@@ -78,8 +78,8 @@ void __stdcall UI::RenderMenuWindow() {
         PushSolid();
         if (ImGui::BeginMenu(Translations::Get("Options"))) {
             if (ImGui::MenuItem(Translations::Get("Options.ResumeGame"))) {
-                WindowManager::MainInterface->PauseGame = false;
-                WindowManager::ConfigInterface->PauseGame = false;
+                WindowManager::MainInterface->BlockUserInput = false;
+                WindowManager::ConfigInterface->BlockUserInput = false;
             }
             if (ImGui::MenuItem(Translations::Get("Options.OpenSettings"))) {
                 WindowManager::ConfigInterface->IsOpen = true;
