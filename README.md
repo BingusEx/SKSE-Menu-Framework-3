@@ -2,7 +2,11 @@
 
 Mods using the old header should be fully compatible; however, if you want to use the new features, you need to update the [header file](https://github.com/QTR-Modding/SKSE-Menu-Framework-3/blob/master/resources/SKSEMenuFramework.h)
 
-# New features to users
+# New features
+
+Video demonstration of the update
+
+[![Video Demonstration of the update](https://img.youtube.com/vi/pjeNZ6jXDmI/0.jpg)](https://www.youtube.com/watch?v=pjeNZ6jXDmI)
 
 ## Translation
 
@@ -24,10 +28,6 @@ If you are on a gamepad you can select this menu by pressing X
 Now it is possible for modders to create menus that do not pause the game, and also it is now possible to unpause the mod control panel on Options/Resume Game.
 
 # New Features Added To The API
-
-Video demonstration of the update
-
-[![Video Demonstration of the update](https://img.youtube.com/vi/pjeNZ6jXDmI/0.jpg)](https://www.youtube.com/watch?v=pjeNZ6jXDmI)
 
 ## Is any window open API
 
