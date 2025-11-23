@@ -27,11 +27,11 @@ Now it is possible for modders to create menus that do not pause the game, and a
 
 Video demonstration of the update
 
-[![Video Demonstration of the update](https://img.youtube.com/vi/ZNCh1pje3qc/0.jpg)](https://www.youtube.com/watch?v=ZNCh1pje3qc)
+[![Video Demonstration of the update](https://img.youtube.com/vi/pjeNZ6jXDmI/0.jpg)](https://www.youtube.com/watch?v=pjeNZ6jXDmI)
 
 ## Is any window open API
 
-If the result is true, the player is currently controlling the game; otherwise, it is false
+If returns true, the player is currently controlling the game; otherwise, it returns false
 
 ```cpp
 bool IsAnyBlockingWindowOpened()
