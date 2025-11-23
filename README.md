@@ -153,7 +153,7 @@ ImGui::Image(texture2, ImVec2(640, 360));
 ```bash
 git clone --recursive https://github.com/alandtse/CommonLibVR
 cd CommonLibVR
-git checkout sse
+git checkout ng
 ```
   
 ## Optional ouput folder optional variables
