@@ -8,9 +8,11 @@
 
 SKSEPluginLoad(const SKSE::LoadInterface* skse) {
     SetupLog();
+    #if VALIDATE_LICENSE
     if (!Licence::Validate()) {
         return false;
     }
+    #endif
     logger::info("Plugin loaded");
     SKSE::Init(skse);
     Config::Init();
