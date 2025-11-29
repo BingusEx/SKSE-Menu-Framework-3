@@ -20,21 +20,21 @@ void Hooks::D3DInitHook::install() {
     SKSE::AllocTrampoline(14);
     auto& trampoline = SKSE::GetTrampoline();
     originalFunction = trampoline.write_call<5>(
-        REL::RelocationID(75595, 77226, 0xDC5530).address() + REL::Relocate(0x9, 0x275, 0x9), thunk);
+        REL::RelocationID(75595, 77226, 75595).address() + REL::Relocate(0x9, 0x275, 0x9), thunk);
 }
 
 void Hooks::DXGIPresentHook::install() {
     SKSE::AllocTrampoline(14);
     auto& trampoline = SKSE::GetTrampoline();
     originalFunction = trampoline.write_call<5>(
-        REL::RelocationID(75461, 77246, 0xDBBDD0).address() + REL::Relocate(0x9, 0x9, 0x15), thunk);
+        REL::RelocationID(75461, 77246, 75461).address() + REL::Relocate(0x9, 0x9, 0x15), thunk);
 }
 
 void Hooks::ProcessInputQueueHook::install() {
     SKSE::AllocTrampoline(14);
     auto& trampoline = SKSE::GetTrampoline();
     originalFunction = trampoline.write_call<5>(
-        REL::RelocationID(67315, 68617, 0xC519E0).address() + REL::Relocate(0x7B, 0x7B, 0x81), thunk);
+        REL::RelocationID(67315, 68617, 67315).address() + REL::Relocate(0x7B, 0x7B, 0x81), thunk);
 }
 void DisableImGuiInput() {
     ImGuiIO& io = ImGui::GetIO();
