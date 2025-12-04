@@ -20,3 +20,4 @@ FUNCTION_PREFIX int64_t RegisterHudElement(HudElementCallback callback);
 FUNCTION_PREFIX void UnregisterHudElement(uint64_t id);
 FUNCTION_PREFIX bool IsAnyBlockingWindowOpened();
 FUNCTION_PREFIX ImTextureID LoadTexture(const char* texturePath, ImVec2* size);
+FUNCTION_PREFIX WindowInterface* GetMCPWindow();

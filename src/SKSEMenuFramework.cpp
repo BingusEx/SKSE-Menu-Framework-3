@@ -5,7 +5,7 @@
 #include "Renderer.h"
 #include "UI.h"
 #include "TextureLoader.h"
-#
+
 void AddSectionItem(const char* path, RenderFunction rendererFunction) { 
     auto pathSplit = SplitString(path, '/');
     AddToTree(UI::RootMenu, pathSplit, rendererFunction, pathSplit.back());
@@ -84,3 +84,5 @@ bool IsAnyBlockingWindowOpened() { return WindowManager::ShouldTheGameBePaused()
 ImTextureID LoadTexture(const char* texturePath, ImVec2* size) {
     return TextureLoader::GetTexture(texturePath, size ? *size : ImVec2{0,0});
 }
+
+WindowInterface* GetMCPWindow() { return WindowManager::MainInterface; }
