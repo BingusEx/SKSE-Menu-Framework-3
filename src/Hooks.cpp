@@ -54,7 +54,9 @@ void Hooks::ProcessInputQueueHook::thunk(RE::BSTEventSource<RE::InputEvent*>* a_
                                       RE::InputEvent* const* a_event) {
     bool isInputCapturedByOpenClose = UI::Renderer::ProcessOpenClose(a_event);
 
-    a_event = InputEventHandler::Process(const_cast<RE::InputEvent**>(a_event));
+    if (!ImGui::IsAnyItemActive()) {
+        a_event = InputEventHandler::Process(const_cast<RE::InputEvent**>(a_event));
+    }
 
     if (isInputCapturedByOpenClose) {
         constexpr RE::InputEvent* const dummy[] = {nullptr};
