@@ -104,8 +104,7 @@ void __stdcall UI::RenderMenuWindow() {
         ImGui::SameLine(closeButtonPos);
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
         if (ImGui::Button("X", ImVec2(closeButtonSize, closeButtonSize))) {
-            WindowManager::MainInterface->IsOpen = false;
-            WindowManager::ConfigInterface->IsOpen = false;
+            WindowManager::Close();
         }
         ImGui::PopStyleVar();
 

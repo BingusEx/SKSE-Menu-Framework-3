@@ -1,4 +1,5 @@
 #include "WindowManager.h"
+#include "Event.h"
 
 Window::Window() {
 	Interface = new WindowInterface();
@@ -24,8 +25,10 @@ void WindowManager::Close() {
     WindowManager::ConfigInterface->BlockUserInput = true;
     ConfigInterface->IsOpen = false;
     MainInterface->IsOpen = false;
+    Event::DispatchEvent(Event::EventType::kCloseMenu);
 }
 
 void WindowManager::Open() {
     MainInterface->IsOpen = true;
+    Event::DispatchEvent(Event::EventType::kOpenMenu);
 }

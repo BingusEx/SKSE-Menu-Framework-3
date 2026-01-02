@@ -89,4 +89,5 @@ void DisposeTexture(const char* texturePath) {
     TextureLoader::DisposeTexture(texturePath);
 }
 
-WindowInterface* GetMCPWindow() { return WindowManager::MainInterface; }
+void RegisterEvent(Event::EventCallback callback) { Event::AddEventListener(callback); }
+void UnregisterEvent(uint64_t id) { Event::RemoveEventListener(id); }
