@@ -61,6 +61,16 @@ ImTextureID TextureLoader::LoadTextureAny(std::string imagePath, ImVec2 size) {
     return LoadWIC(imagePath);
 }
 
+void TextureLoader::DisposeTexture(std::string path) {
+    auto it = textures.find(path);
+    if (it != textures.end()) {
+        if (it->second) {
+            reinterpret_cast<ID3D11ShaderResourceView*>(it->second)->Release();
+        }
+        textures.erase(it);
+    }
+}
+
 ImTextureID TextureLoader::GetTexture(std::string texturePath, ImVec2 size) {
     logger::error("TP {}", texturePath);
 

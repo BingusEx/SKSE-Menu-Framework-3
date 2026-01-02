@@ -85,4 +85,8 @@ ImTextureID LoadTexture(const char* texturePath, ImVec2* size) {
     return TextureLoader::GetTexture(texturePath, size ? *size : ImVec2{0,0});
 }
 
+void DisposeTexture(const char* texturePath) { 
+    TextureLoader::DisposeTexture(texturePath);
+}
+
 WindowInterface* GetMCPWindow() { return WindowManager::MainInterface; }

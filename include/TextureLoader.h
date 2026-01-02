@@ -25,6 +25,7 @@ private:
     static inline std::map<std::string, ImTextureID> textures;
 
 public:
+    static void DisposeTexture(std::string path);
     static ImTextureID GetTexture(std::string path, ImVec2 size = {0,0});
     static void Init(ID3D11Device* device, ID3D11DeviceContext* context);
 };
