@@ -2,6 +2,38 @@
 
 Mods using the old header should be fully compatible; however, if you want to use the new features, you need to update the [header file](https://github.com/QTR-Modding/SKSE-Menu-Framework-3/blob/master/resources/SKSEMenuFramework.h)
 
+
+# New features 3.4
+
+## DisposeTexture
+
+This function can be used to free the texture memory when it is no longer used and to allow the texture to be refreshed once LoadTexture is called.
+
+```cpp
+SKSEMenuFramework::DisposeTexture(TEXTURE_PATH);
+```
+
+## SKSEMenuFramework::Model::Event
+
+This class can be used to listen for open and close menu events.
+
+```cpp
+void __stdcall EventListener(SKSEMenuFramework::Model::EventType eventType) {
+    logger::trace("Event: {}", eventType);
+}
+
+SKSEMenuFramework::Model::Event* event;
+void UI::Register() {
+    event = new SKSEMenuFramework::Model::Event(EventListener);
+}
+```
+
+to stop listening:
+
+```cpp
+delete event;
+```
+
 # New features
 
 Video demonstration of the update
