@@ -23,5 +23,5 @@ FUNCTION_PREFIX void UnregisterHudElement(uint64_t id);
 FUNCTION_PREFIX bool IsAnyBlockingWindowOpened();
 FUNCTION_PREFIX ImTextureID LoadTexture(const char* texturePath, ImVec2* size);
 FUNCTION_PREFIX void DisposeTexture(const char* texturePath);
-FUNCTION_PREFIX void RegisterEvent(Event::EventCallback callback);
-FUNCTION_PREFIX void UnregisterEvent(uint64_t id);
+FUNCTION_PREFIX int64_t RegisterEvent(Event::EventCallback callback);
+FUNCTION_PREFIX void UnregisterEvent(int64_t id);

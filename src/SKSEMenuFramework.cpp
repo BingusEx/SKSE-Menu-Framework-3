@@ -89,5 +89,5 @@ void DisposeTexture(const char* texturePath) {
     TextureLoader::DisposeTexture(texturePath);
 }
 
-void RegisterEvent(Event::EventCallback callback) { Event::AddEventListener(callback); }
-void UnregisterEvent(uint64_t id) { Event::RemoveEventListener(id); }
+int64_t RegisterEvent(Event::EventCallback callback) { return Event::AddEventListener(callback); }
+void UnregisterEvent(int64_t id) { Event::RemoveEventListener(id); }

@@ -1,16 +1,16 @@
 #include "Event.h"
 
-uint64_t autoIncrement = 0;
-static std::map<uint64_t, Event::EventCallback> listeners;
+int64_t autoIncrement = 0;
+static std::map<int64_t, Event::EventCallback> listeners;
 
-uint64_t Event::AddEventListener(EventCallback callback) {
+int64_t Event::AddEventListener(EventCallback callback) {
     if (!callback) return 0;
-    uint64_t id = ++autoIncrement;
+    int64_t id = ++autoIncrement;
     listeners[id] = callback;
     return id;
 }
 
-void Event::RemoveEventListener(uint64_t id) { listeners.erase(id); }
+void Event::RemoveEventListener(int64_t id) { listeners.erase(id); }
 
 void Event::DispatchEvent(EventType type) {
     if (type == kNone) return;
