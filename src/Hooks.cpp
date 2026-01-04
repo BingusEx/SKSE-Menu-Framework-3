@@ -12,7 +12,7 @@
 
 void Hooks::Install() {
     D3DInitHook::install();
-    DXGIPresentHook::install();
+    RenderUIHook::install();
     ProcessInputQueueHook::install();
 }
 
@@ -23,11 +23,11 @@ void Hooks::D3DInitHook::install() {
         REL::RelocationID(75595, 77226, 75595).address() + REL::Relocate(0x9, 0x275, 0x9), thunk);
 }
 
-void Hooks::DXGIPresentHook::install() {
+void Hooks::RenderUIHook::install() {
     SKSE::AllocTrampoline(14);
     auto& trampoline = SKSE::GetTrampoline();
     originalFunction = trampoline.write_call<5>(
-        REL::RelocationID(75461, 77246, 75461).address() + REL::Relocate(0x9, 0x9, 0x15), thunk);
+        REL::RelocationID(35556, 36555, 35556).address() + REL::Relocate(0x3ab, 0x371), thunk);
 }
 
 void Hooks::ProcessInputQueueHook::install() {
@@ -50,6 +50,33 @@ void EnableImGuiInput() {
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 }
+
+RE::InputEvent** RemoveNonPrintScreenInputs(RE::InputEvent** a_event) {
+    auto first = *a_event;
+    auto last = *a_event;
+    size_t length = 0;
+
+    for (auto current = *a_event; current; current = current->next) {
+
+        if (auto button = current->AsButtonEvent()) {
+            if (button->GetDevice() == RE::INPUT_DEVICE::kKeyboard && button->GetIDCode() == RE::BSWin32KeyboardDevice::Keys::kPrintScreen) {
+                last = current;
+                ++length;
+                continue;
+            }
+        }
+
+        if (current != last) {
+            last->next = current->next;
+        } else {
+            last = current->next;
+            first = current->next;
+        }
+    }
+    a_event[0] = first;
+    return a_event;
+}
+
 void Hooks::ProcessInputQueueHook::thunk(RE::BSTEventSource<RE::InputEvent*>* a_dispatcher,
                                       RE::InputEvent* const* a_event) {
     bool isInputCapturedByOpenClose = UI::Renderer::ProcessOpenClose(a_event);
@@ -63,10 +90,9 @@ void Hooks::ProcessInputQueueHook::thunk(RE::BSTEventSource<RE::InputEvent*>* a_
         originalFunction(a_dispatcher, dummy);
     } else {
         if (WindowManager::ShouldTheGameBePaused()) {
-            constexpr RE::InputEvent* const dummy[] = {nullptr};
-            originalFunction(a_dispatcher, dummy);
             EnableImGuiInput();
             UI::TranslateInputEvent(a_event);
+            originalFunction(a_dispatcher, RemoveNonPrintScreenInputs(const_cast<RE::InputEvent**>(a_event)));
         } else {
             DisableImGuiInput();
             originalFunction(a_dispatcher, a_event);
@@ -155,14 +181,11 @@ void Hooks::D3DInitHook::thunk() {
     logger::debug("[D3DInitHook] FINISH");
 }
 
-void Hooks::DXGIPresentHook::thunk(std::uint32_t a_timer) {
-    originalFunction(a_timer);
-
+int64_t Hooks::RenderUIHook::thunk(int64_t gMenuManager) {
+    auto result = originalFunction(gMenuManager);
     if (!UI::Renderer::initialized.load()) {
-        return;
+        return result;
     }
-
-
 
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
@@ -196,4 +219,5 @@ void Hooks::DXGIPresentHook::thunk(std::uint32_t a_timer) {
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
     FontManager::CleanFont();
+    return result;
 }

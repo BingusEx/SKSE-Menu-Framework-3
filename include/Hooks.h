@@ -14,10 +14,10 @@ namespace Hooks {
         static inline REL::Relocation<decltype(thunk)> originalFunction;
     };
 
-    struct DXGIPresentHook {
-        static void thunk(std::uint32_t a_timer);
-        static void install();
+    struct RenderUIHook {
+        static int64_t thunk(int64_t gMenuManager);
         static inline REL::Relocation<decltype(thunk)> originalFunction;
+        static void install();
     };
 
     struct ProcessInputQueueHook {
