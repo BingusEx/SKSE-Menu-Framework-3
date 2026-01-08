@@ -72,9 +72,6 @@ void TextureLoader::DisposeTexture(std::string path) {
 }
 
 ImTextureID TextureLoader::GetTexture(std::string texturePath, ImVec2 size) {
-    logger::error("TP {}", texturePath);
-
-
     std::string textureKey = texturePath;
 
     constexpr float snapFactor = 8.f;
