@@ -15,8 +15,10 @@ namespace Hooks {
     };
 
     struct RenderUIHook {
-        static int64_t thunk(int64_t gMenuManager);
-        static inline REL::Relocation<decltype(thunk)> originalFunction;
+        static int64_t thunk1(int64_t gMenuManager);
+        static int64_t thunk2(int64_t gMenuManager);
+        static inline REL::Relocation<decltype(thunk1)> originalFunction1;
+        static inline REL::Relocation<decltype(thunk2)> originalFunction2;
         static void install();
     };
 

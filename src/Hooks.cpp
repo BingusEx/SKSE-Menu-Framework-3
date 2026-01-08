@@ -26,8 +26,9 @@ void Hooks::D3DInitHook::install() {
 void Hooks::RenderUIHook::install() {
     SKSE::AllocTrampoline(14);
     auto& trampoline = SKSE::GetTrampoline();
-    originalFunction = trampoline.write_call<5>(
-        REL::RelocationID(35556, 36555, 35556).address() + REL::Relocate(0x3ab, 0x371), thunk);
+    originalFunction1 = trampoline.write_call<5>(REL::RelocationID(35556, 36555, 35556).address() + REL::Relocate(0x3ab, 0x371), thunk1);
+    SKSE::AllocTrampoline(14);
+    originalFunction2 = trampoline.write_call<5>(REL::RelocationID(38085, 39039).address() + REL::Relocate(0x19a, 0x19a), thunk2);
 }
 
 void Hooks::ProcessInputQueueHook::install() {
@@ -181,10 +182,9 @@ void Hooks::D3DInitHook::thunk() {
     logger::debug("[D3DInitHook] FINISH");
 }
 
-int64_t Hooks::RenderUIHook::thunk(int64_t gMenuManager) {
-    auto result = originalFunction(gMenuManager);
+void Render() {
     if (!UI::Renderer::initialized.load()) {
-        return result;
+        return;
     }
 
     ImGui_ImplDX11_NewFrame();
@@ -219,5 +219,16 @@ int64_t Hooks::RenderUIHook::thunk(int64_t gMenuManager) {
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
     FontManager::CleanFont();
+}
+
+int64_t Hooks::RenderUIHook::thunk1(int64_t gMenuManager) {
+    auto result = originalFunction1(gMenuManager);
+    Render();
+    return result;
+}
+
+int64_t Hooks::RenderUIHook::thunk2(int64_t gMenuManager) { 
+    auto result = originalFunction2(gMenuManager);
+    Render();
     return result;
 }
