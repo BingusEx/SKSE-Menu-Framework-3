@@ -23,7 +23,6 @@ uint8_t GetToggleMode(std::string input) {
     };
     auto it = map.find(input);
     if (it != map.end()) {
-        logger::trace("its {}", it->second);
         return it->second;
     } else {
         return 0x0;
