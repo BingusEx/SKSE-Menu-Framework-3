@@ -8,7 +8,7 @@
 #include "HudManager.h"
 #include "GameLock.h"
 #include "TextureLoader.h"
-
+#include "Event.h"
 
 void Hooks::Install() {
     D3DInitHook::install();
@@ -187,6 +187,8 @@ void Render() {
         return;
     }
 
+    Event::DispatchEvent(Event::EventType::kBeforeRender);
+
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
     {
@@ -219,6 +221,8 @@ void Render() {
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
     FontManager::CleanFont();
+
+    Event::DispatchEvent(Event::EventType::kAfterRender);
 }
 
 int64_t Hooks::RenderUIHook::thunk1(int64_t gMenuManager) {

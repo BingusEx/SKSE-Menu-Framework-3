@@ -6,7 +6,7 @@ typedef void(__stdcall* RenderFunction)();
 class WindowInterface {
 public:
     std::atomic<bool> IsOpen{false};
-    std::atomic<bool> BlockUserInput{false};
+    std::atomic<bool> BlockUserInput{true};
 };
 
 
