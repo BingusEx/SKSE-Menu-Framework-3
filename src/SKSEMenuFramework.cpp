@@ -6,6 +6,8 @@
 #include "UI.h"
 #include "TextureLoader.h"
 
+#define MENU_FRAMEWORK_VERSION 3.7f
+
 void AddSectionItem(const char* path, RenderFunction rendererFunction) { 
     auto pathSplit = SplitString(path, '/');
     AddToTree(UI::RootMenu, pathSplit, rendererFunction, pathSplit.back());
@@ -91,3 +93,5 @@ void DisposeTexture(const char* texturePath) {
 
 int64_t RegisterEvent(Event::EventCallback callback) { return Event::AddEventListener(callback); }
 void UnregisterEvent(int64_t id) { Event::RemoveEventListener(id); }
+
+float GetMenuFrameworkVersion() { return MENU_FRAMEWORK_VERSION; }
