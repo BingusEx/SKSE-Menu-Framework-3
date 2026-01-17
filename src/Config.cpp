@@ -89,8 +89,8 @@ void Config::Save() {
         ini->SetString("ToggleModeGamePad", "HOLD");
     } else if (ToggleModeGamePad == 2) {
         ini->SetString("ToggleModeGamePad", "DOUBLEPRESS");
-    } else if (ToggleMode == 3) {
-        ini->SetString("ToggleMode", "OFF");
+    } else if (ToggleModeGamePad == 3) {
+        ini->SetString("ToggleModeGamePad", "OFF");
     }
 
     ini->SetString("ToggleKey", GetKeyName(ToggleKey, RE::INPUT_DEVICE::kKeyboard).c_str());
