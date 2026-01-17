@@ -19,7 +19,8 @@ uint8_t GetToggleMode(std::string input) {
     const std::unordered_map<std::string, uint8_t> map = {
         {"SINGLEPRESS", 0},
         {"HOLD", 1},
-        {"DOUBLEPRESS", 2}
+        {"DOUBLEPRESS", 2},
+        {"OFF", 3}
     };
     auto it = map.find(input);
     if (it != map.end()) {
