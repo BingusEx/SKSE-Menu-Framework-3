@@ -91,7 +91,12 @@ void DisposeTexture(const char* texturePath) {
     TextureLoader::DisposeTexture(texturePath);
 }
 
-int64_t RegisterEvent(Event::EventCallback callback) { return Event::AddEventListener(callback); }
+int64_t RegisterEvent(Event::EventCallback callback) { return Event::AddEventListener(callback, 0); }
+
+int64_t RegisterEventPriority(Event::EventCallback callback, float priority) {
+    return Event::AddEventListener(callback, priority);
+}
+
 void UnregisterEvent(int64_t id) { Event::RemoveEventListener(id); }
 
 float GetMenuFrameworkVersion() { return MENU_FRAMEWORK_VERSION; }

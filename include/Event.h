@@ -11,7 +11,7 @@ namespace Event {
 
     typedef void(__stdcall* EventCallback)(EventType type);
 
-    int64_t AddEventListener(EventCallback callback);
+    int64_t AddEventListener(EventCallback callback, float priority);
     void RemoveEventListener(int64_t id);
     void DispatchEvent(EventType type);
 }
