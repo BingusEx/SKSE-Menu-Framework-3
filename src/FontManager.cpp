@@ -17,7 +17,7 @@ FontContainer FontManager::LoadFonts(ImGuiIO& io, float size) {
         ImFontGlyphRangesBuilder builder;
         builder.AddRanges(io.Fonts->GetGlyphRangesDefault());  // Basic English
 
-        if (Config::EnableChinese) builder.AddRanges(io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+        if (Config::EnableChinese) builder.AddRanges(io.Fonts->GetGlyphRangesChineseFull());
         if (Config::EnableJapanese) builder.AddRanges(io.Fonts->GetGlyphRangesJapanese());
         if (Config::EnableKorean) builder.AddRanges(io.Fonts->GetGlyphRangesKorean());
         if (Config::EnableCyrillic) builder.AddRanges(io.Fonts->GetGlyphRangesCyrillic());
@@ -36,6 +36,12 @@ FontContainer FontManager::LoadFonts(ImGuiIO& io, float size) {
 
     ImFontConfig font_config;
     font_config.PixelSnapH = true;
+
+    if (Config::EnableChinese) 
+    {
+        io.Fonts->Flags |= ImFontAtlasFlags_NoPowerOfTwoHeight;
+        io.Fonts->TexDesiredWidth = 8192;
+    }
 
     // Retrieve a pointer to the absolutely safe glyph range for the corresponding font size from the map.
     result.defaultFont =
