@@ -1,9 +1,7 @@
-#include <imgui.h>
 
-#include <fstream>
-#include <nlohmann/json.hpp>
 #include "Theme.h"
 #include "Utils.h"
+
 static ImVec4 HexToImVec4(const std::string& hex) {
     unsigned int v = 0;
     std::stringstream ss;

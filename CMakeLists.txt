@@ -1,145 +1,125 @@
-# ---------------------------------------------------- #
-#                 Required envs assert                 #
-# ---------------------------------------------------- #
-
-if(NOT DEFINED ENV{COMMONLIB_SSE_FOLDER})
-  message(FATAL_ERROR "Missing COMMONLIB_SSE_FOLDER environment variable")
-endif()
-
-# ---------------------------------------------------- #
-#               Imports and definitions                #
-# ---------------------------------------------------- #
-
-include(cmake/lib/copyOutputs.cmake)
-include(cmake/lib/automaticGameFolderOutput.cmake)
-include(cmake/lib/autoCollectSources.cmake)
-
-
-add_src_folder(src)
-add_include_folder(include)
-
-add_src_folder(vendor/src)
-add_include_folder(vendor/include)
-
-
 cmake_minimum_required(VERSION 3.21)
-set(AUTHOR_NAME "SkyrimThiago")
-set(PRODUCT_NAME "SKSEMenuFramework")
-set(BEAUTIFUL_NAME "SKSE Menu Framework")
+cmake_policy(VERSION 3.21...3.31)
 
-project(${PRODUCT_NAME} VERSION 3.0.0.0 LANGUAGES CXX)
+# #######################################################################################################################
+# # Project Defenition
+# #######################################################################################################################
+
+project(
+	SKSEMenuFramework
+	VERSION 3.0.0.1
+	DESCRIPTION ""
+	LANGUAGES CXX
+)
+
+# Not Explosed By Cmake, Manually Set Here for use by version.rc.in
+set(PROJECT_COPYRIGHT "")
+set(PROJECT_DESCRIPTION "${PROJECT_DESCRIPTION}")
+set(PROJECT_NAME "${PROJECT_NAME}")
+set(PROJECT_FRIENDLY_NAME "${PROJECT_NAME}")
+
+# Options
+option(PL_STRICT_COMPILE "Enable strict compilation flags (treat warnings as errors)" OFF)
+option(PL_DEPLOY_TO_FOLDER "Copy The Built DLL and PDB to the EnvVar Defined Target location" ON)
+option(PL_BUILD_DISTRIBUTION "Construct a distribution folder after each build" OFF)
+
+# #######################################################################################################################
+# # Flags
+# #######################################################################################################################
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Export compile_commands.json")
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+add_compile_definitions(_ENABLE_EXTENDED_ALIGNED_STORAGE)
 
-# ---------------------------------------------------- #
-#                      Resources                       #
-# ---------------------------------------------------- #
+# Check if MSVC is the compiler
+if(MSVC)
+    # Extract the version number of the MSVC compiler
+    string(REGEX REPLACE "^([0-9]+)\\.([0-9]+).*" "\\1.\\2" MSVC_VERSION_STRING "${MSVC_VERSION}")
+    message(STATUS "Detected MSVC version: ${MSVC_VERSION_STRING}")
 
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.rc.in
-    ${CMAKE_CURRENT_BINARY_DIR}/version.rc
-    @ONLY)
+    # Check if the MSVC version is at least 14.39
+    if(MSVC_VERSION LESS 1939)
+        message(FATAL_ERROR "MSVC version 14.39 or higher is required. Detected version: ${MSVC_VERSION_STRING}")
+    endif()
+else()
+    message(FATAL_ERROR "This project currently only supports MSVC as the compiler.")
+endif()
 
-set(RESOURCE_FILE ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
-set(RESOURCE_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/version.res)
-
-add_custom_command(
-    OUTPUT ${RESOURCE_OUTPUT}
-    COMMAND rc /fo ${RESOURCE_OUTPUT} ${RESOURCE_FILE}
-    DEPENDS ${RESOURCE_FILE}
-)
-
-add_custom_target(Resource ALL DEPENDS ${RESOURCE_OUTPUT})
-
-# ---------------------------------------------------- #
-#                Plugin Configuration                  #
-# ---------------------------------------------------- #
-
-include(FetchContent)
-
-set(ENABLE_SKYRIM_SE ON CACHE BOOL " " FORCE)
-set(ENABLE_SKYRIM_AE ON CACHE BOOL " " FORCE)
-set(ENABLE_SKYRIM_VR ON CACHE BOOL " " FORCE)
-set(BUILD_TESTS OFF CACHE BOOL " " FORCE)
-set(VALIDATE_LICENSE OFF CACHE BOOL " " FORCE)
-
-add_subdirectory("$ENV{COMMONLIB_SSE_FOLDER}" ${CMAKE_CURRENT_BINARY_DIR}/_deps/clib-build)
-get_target_property(COMMONLIB_SRC_DIR CommonLibSSE SOURCE_DIR)
-
-find_path(CLIB_UTIL_INCLUDE_DIRS "ClibUtil/utils.hpp")
-file(
-  GLOB_RECURSE
-  sources
-  ${CMAKE_CURRENT_BINARY_DIR}/version.rc
-  ${sources}
-    imgui/backends/imgui_impl_dx11.cpp
-    imgui/backends/imgui_impl_win32.cpp
-    imgui/imgui.cpp
-    imgui/imgui_demo.cpp
-    imgui/imgui_draw.cpp
-    imgui/imgui_tables.cpp
-    imgui/imgui_widgets.cpp
-)
-
-source_group(
-  TREE ${CMAKE_CURRENT_SOURCE_DIR}
-  FILES ${headers} ${sources}
-)
-
-set(BUILD_TESTS OFF)
-include(${COMMONLIB_SRC_DIR}/cmake/CommonLibSSE.cmake)
-
-add_commonlibsse_plugin(
-  ${PROJECT_NAME}
-  AUTHOR AUTHOR_NAME
-  SOURCES ${headers} ${sources}
-)
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23) 
-target_precompile_headers(${PROJECT_NAME} PRIVATE include/PCH.h)
-target_compile_definitions(${PROJECT_NAME}  PRIVATE BEAUTIFUL_NAME="${BEAUTIFUL_NAME}" IMGUI_DEFINE_MATH_OPERATORS)
+# #######################################################################################################################
+# # Project modules
+# #######################################################################################################################
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+include(xSEPlugin)
 
 
-set(header_dirs "")
+# #######################################################################################################################
+# # Find dependencies - VCPKG Ports
+# #######################################################################################################################
 
-foreach(header ${headers})
-    get_filename_component(dir ${header} DIRECTORY)
-    list(APPEND header_dirs ${dir})
-endforeach()
+find_path(CLIB_UTIL_INCLUDE_DIRS "ClibUtil/Utils.hpp")
 
-list(REMOVE_DUPLICATES header_dirs)
+# #######################################################################################################################
+# # Find dependencies - VCPKG Other
+# #######################################################################################################################
+
+find_path(SIMPLEINI_INCLUDE_DIRS "ConvertUTF.c")
+find_path(DETOURS_INCLUDE_DIRS "detours/detours.h")
+find_library(DETOURS_LIBRARY detours REQUIRED)
+
+# #######################################################################################################################
+# # Find dependencies - Git
+# #######################################################################################################################
+
+
+# #######################################################################################################################
+# # Find dependencies - VCPKG
+# #######################################################################################################################
+
+find_package(xbyak CONFIG REQUIRED)
+find_package(NanoSVG REQUIRED)
+find_package(nlohmann_json 3.2.0 REQUIRED)
+
+# #######################################################################################################################
+# # Non-CLib Includes
+# #######################################################################################################################
 
 target_include_directories(
 	${PROJECT_NAME}
 	PRIVATE
-    ${header_dirs}
-    ${CLIB_UTIL_INCLUDE_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/imgui
-    ${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends
+	${CLIBUTIL_INCLUDE_DIRS}
+	${DETOURS_INCLUDE_DIRS}
+	${SIMPLEINI_INCLUDE_DIRS}
 )
 
-
-find_package(NanoSVG REQUIRED)
-
-find_library(DIRECTXTK_LIBRARY NAMES DirectXTK PATHS ${CMAKE_BINARY_DIR}/debug/vcpkg_installed/x64-windows-static/lib)
 target_link_libraries(
 	${PROJECT_NAME}
 	PRIVATE
-        NanoSVG::nanosvg 
-        NanoSVG::nanosvgrast
-        ${DIRECTXTK_LIBRARY}
+    ${DETOURS_LIBRARY}
+	NanoSVG::nanosvg 
+    NanoSVG::nanosvgrast
+	xbyak::xbyak
+	nlohmann_json::nlohmann_json
 )
 
+# #######################################################################################################################
+# # Packagging
+# #######################################################################################################################
+#include(Package)
 
+# ----- debug
+message(STATUS "CMAKE_CXX_FLAGS:                        ${CMAKE_CXX_FLAGS}")
+message(STATUS "CMAKE_CXX_FLAGS_DEBUG:                  ${CMAKE_CXX_FLAGS_DEBUG}")
+message(STATUS "CMAKE_CXX_FLAGS_RELEASE:                ${CMAKE_CXX_FLAGS_RELEASE}")
+message(STATUS "CMAKE_CXX_FLAGS_RELWITHDEBINFO:         ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+message(STATUS "CMAKE_EXE_LINKER_FLAGS:                 ${CMAKE_EXE_LINKER_FLAGS}")
+message(STATUS "CMAKE_EXE_LINKER_FLAGS_DEBUG:           ${CMAKE_EXE_LINKER_FLAGS_DEBUG}")
+message(STATUS "CMAKE_EXE_LINKER_FLAGS_RELEASE:         ${CMAKE_EXE_LINKER_FLAGS_RELEASE}")
+message(STATUS "CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO:  ${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO}")
 
+get_target_property(compile_flags ${PROJECT_NAME} COMPILE_OPTIONS)
+message(STATUS "COMPILE_OPTIONS:      ${compile_flags}")
 
-# ---------------------------------------------------- #
-#                        Output                        #
-# ---------------------------------------------------- #
+get_target_property(link_flags ${PROJECT_NAME} LINK_OPTIONS)
+message(STATUS "LINK_OPTIONS:         ${link_flags}")
 
-set(wildlander_output false)
-set(steam_owrt_output false)
-set(steam_mods_output true)
-automaticGameFolderOutput(wildlander_output, steam_owrt_output, steam_mods_output)

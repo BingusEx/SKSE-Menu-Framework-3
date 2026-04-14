@@ -19,13 +19,13 @@ void Translations::Install() {
         logger::trace("translation json: {} must be an object", translationsFolder);
     }
     for (auto& [key, value] : j.items()) {
-        logger::trace("{} -> {}", key, value);
+        logger::trace("{} -> {}", key, value.get<std::string>());
         std::string v = value;
         translations[key] = strdup(v.c_str());
     }
 }
 
-const const char* Translations::Get(std::string key) {
+const char* Translations::Get(std::string key) {
     IF_FIND(translations, key, it) {
         return it->second;
     }

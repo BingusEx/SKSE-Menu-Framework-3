@@ -1,10 +1,10 @@
 #include "UI.h"
 #include "WindowManager.h"
-#include <imgui.h>
 #include "Renderer.h"
 #include "Application.h"
 #include "SKSEMenuFramework.h"
 #include "Translations.h"
+
 static ImGuiTextFilter filter;
 
 UI::MenuTree* UI::RootMenu = new UI::MenuTree();

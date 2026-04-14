@@ -5,6 +5,7 @@
 #include "SKSEMenuFramework.h"
 #include "Licence.h"
 #include "Translations.h"
+#include "Version.hpp"
 
 SKSEPluginLoad(const SKSE::LoadInterface* skse) {
     SetupLog();
@@ -24,3 +25,11 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse) {
     Hooks::Install();
     return true;
 }
+
+SKSEPluginInfo(
+    .Version = Plugin::ModVersion, 
+    .Name = Plugin::ModName, 
+    .Author = "SkyrimThiago",
+    .StructCompatibility = SKSE::StructCompatibility::Independent,
+    .RuntimeCompatibility = SKSE::VersionIndependence::AddressLibrary
+);

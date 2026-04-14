@@ -2,14 +2,7 @@
 #include "WindowManager.h"
 #include "Config.h"
 #include "Input.h"
-#include "imgui_impl_dx11.h"
-#include "Application.h"
-#include "Input.h"
 #include "Model.h"
-#include "imgui_impl_dx11.h"
-#include "imgui_impl_win32.h"
-#include "dxgi.h"
-#include "Main.h"
 
 
 bool UI::Renderer::ProcessOpenClose(RE::InputEvent* const* evns) {

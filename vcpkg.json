@@ -1,25 +1,24 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
-  "name": "sksemenuframework",
-  "version-string": "2.1.1.0",
-  "dependencies": [
-    "fast-cpp-csv-parser",
-    "rsm-binary-io",
-    "simpleini",
-    "spdlog",
-    "xbyak",
-    "nanosvg",
-    "rapidcsv",
-    "directxmath",
-    "directxtk",
-    "nlohmann-json",
-    "clib-util"
-  ],
-  "overrides": [
-    {
-      "name": "fmt",
-      "version": "9.1.0"
+  "name": "plugin",
+  "version-string": "1.0.0",
+  "description": "",
+  "features": {
+    "plugin": {
+      "description": "Build the plugin.",
+      "dependencies": [
+        "rapidcsv",
+        "directxtk",
+        "spdlog",
+        "clib-util",
+        "detours",
+        "xbyak",
+        "simpleini",
+        "nanosvg",
+        "nlohmann-json"
+      ]
     }
-  ],
-  "builtin-baseline": "e3ed41868d5034bc608eaaa58383cd6ecdbb5ffb"
+  },
+  "default-features": ["plugin"],
+  "overrides": []
 }

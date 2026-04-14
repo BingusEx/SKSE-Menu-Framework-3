@@ -1,8 +1,6 @@
 #include "SKSEMenuFramework.h"
 #include "FontManager.h"
-#include <imgui.h>
 #include "Application.h"
-#include "Renderer.h"
 #include "UI.h"
 #include "TextureLoader.h"
 

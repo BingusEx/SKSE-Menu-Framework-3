@@ -1,8 +1,7 @@
 #include "Hooks.h"
 #include "Renderer.h"
 #include "FontManager.h"
-#include "imgui_impl_dx11.h"
-#include "imgui_impl_win32.h"
+
 #include "WindowManager.h"
 #include "InputEventHandler.h"
 #include "HudManager.h"
