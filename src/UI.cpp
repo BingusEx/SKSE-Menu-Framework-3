@@ -142,11 +142,12 @@ void __stdcall UI::RenderMenuWindow() {
     node_id = 0;
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 5.0f));
     for (const auto& item : RootMenu->Children) {
-        if (filter.PassFilter(item.first.c_str()) &&
-            (ImGui::CollapsingHeader(std::format("{}##{}", item.first, node_id).c_str()))) {
+        if (filter.PassFilter(item.first.c_str()) && (ImGui::CollapsingHeader(std::format("{}##{}", item.first, node_id).c_str(), ImGuiTreeNodeFlags_DefaultOpen))) {
             for (auto node : item.second->SortedChildren) {
                 RenderNode(node);
             }
+            //Add Spacing after each mod header.
+            ImGui::Spacing();
         } else {
             for (auto node : item.second->Children) {
                 DummyRenderer(node);
