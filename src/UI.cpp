@@ -137,8 +137,7 @@ void __stdcall UI::RenderMenuWindow() {
     ImGui::EndChild();
 
     // Tree view section
-    ImGui::BeginChild("SKSEModControlPanelTreeView", ImVec2(ImGui::GetContentRegionAvail().x * 0.3f, -FLT_MIN),
-                      ImGuiChildFlags_Border);
+    ImGui::BeginChild("SKSEModControlPanelTreeView", ImVec2(ImGui::GetContentRegionAvail().x * 0.18f, -FLT_MIN), ImGuiChildFlags_Border);
     node_id = 0;
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 5.0f));
     for (const auto& item : RootMenu->Children) {
@@ -147,6 +146,7 @@ void __stdcall UI::RenderMenuWindow() {
                 RenderNode(node);
             }
             //Add Spacing after each mod header.
+            ImGui::Spacing();
             ImGui::Spacing();
         } else {
             for (auto node : item.second->Children) {
