@@ -143,7 +143,7 @@ void Hooks::D3DInitHook::thunk() {
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
     io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
-    io.IniFilename = nullptr;
+    io.IniFilename = "Data\\SKSE\\Plugins\\SKSEMenuFramework_ImGui.ini";
     io.MouseDrawCursor = true;
     io.ConfigWindowsMoveFromTitleBarOnly = true;
 
