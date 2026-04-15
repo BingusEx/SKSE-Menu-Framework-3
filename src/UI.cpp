@@ -5,21 +5,19 @@
 #include "SKSEMenuFramework.h"
 #include "Translations.h"
 
+
+
 static ImGuiTextFilter filter;
-
 UI::MenuTree* UI::RootMenu = new UI::MenuTree();
-
-
+static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
 int frame = 0;
-
 size_t item_current_idx = 0;
 size_t node_id = 0;
 UI::MenuTree* display_node;
 
+static float sidebarWidth = 0.0f;  // 0 = uninitialized
+static bool sidebarVisible = true;
 
-static ImGuiTreeNodeFlags base_flags =
-    ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
-static int selection_mask = (1 << 2);
 
 void DummyRenderer(std::pair<const std::string, UI::MenuTree*>& node) {
     ++node_id;
@@ -115,8 +113,6 @@ void __stdcall UI::RenderMenuWindow() {
     float headerHeight = 41.0f;
     float headerOffsetY = 5.0f;
 
-
-
     // Filter section
     ImGui::BeginChild("TreeView2", ImVec2(ImGui::GetContentRegionAvail().x * 0.3f, filterHeight), ImGuiChildFlags_None);
     filter.Draw("##SKSEModControlPanelMenuFilter", -FLT_MIN);
@@ -136,34 +132,84 @@ void __stdcall UI::RenderMenuWindow() {
     }
     ImGui::EndChild();
 
-    // Tree view section
-    ImGui::BeginChild("SKSEModControlPanelTreeView", ImVec2(ImGui::GetContentRegionAvail().x * 0.18f, -FLT_MIN), ImGuiChildFlags_Border);
-    node_id = 0;
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 5.0f));
-    for (const auto& item : RootMenu->Children) {
-        if (filter.PassFilter(item.first.c_str()) && (ImGui::CollapsingHeader(std::format("{}##{}", item.first, node_id).c_str(), ImGuiTreeNodeFlags_DefaultOpen))) {
-            for (auto node : item.second->SortedChildren) {
-                RenderNode(node);
-            }
-            //Add Spacing after each mod header.
-            ImGui::Spacing();
-            ImGui::Spacing();
-        } else {
-            for (auto node : item.second->Children) {
-                DummyRenderer(node);
+    static float sidebarWidth = 0.0f;
+    static bool sidebarVisible = true;
+
+    if (sidebarWidth <= 0.0f) sidebarWidth = ImGui::GetContentRegionAvail().x * 0.18f;
+
+    constexpr float minSidebarWidth = 60.0f;
+    const float maxSidebarWidth = ImGui::GetContentRegionAvail().x * 0.5f;
+    constexpr float handleWidth = 6.0f;
+    constexpr float toggleBtnSize = 14.0f;
+
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
+    ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_FrameBg));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyleColorVec4(ImGuiCol_FrameBgHovered));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetStyleColorVec4(ImGuiCol_FrameBgActive));
+    if (ImGui::Button("##SBToggle", ImVec2(toggleBtnSize, ImGui::GetContentRegionAvail().y))) {
+        sidebarVisible = !sidebarVisible;
+    }
+    ImGui::PopStyleColor(3);
+    ImGui::PopStyleVar();
+
+    // Draw arrow glyph centred on the button
+    {
+        ImVec2 btnMin = ImGui::GetItemRectMin();
+        ImVec2 btnMax = ImGui::GetItemRectMax();
+        ImVec2 center = {(btnMin.x + btnMax.x) * 0.5f, (btnMin.y + btnMax.y) * 0.5f};
+        const char* arrow = sidebarVisible ? "<" : ">";
+        ImVec2 textSize = ImGui::CalcTextSize(arrow);
+        ImGui::GetWindowDrawList()->AddText({center.x - textSize.x * 0.5f, center.y - textSize.y * 0.5f}, ImGui::GetColorU32(ImGuiCol_Text), arrow);
+    }
+
+    ImGui::SameLine(0.0f, 0.0f);
+
+    if (sidebarVisible) {
+        // Tree view section
+        ImGui::BeginChild("SKSEModControlPanelTreeView", ImVec2(sidebarWidth, -FLT_MIN), ImGuiChildFlags_Border);
+        node_id = 0;
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 5.0f));
+        for (const auto& item : RootMenu->Children) {
+            if (filter.PassFilter(item.first.c_str()) &&
+                (ImGui::CollapsingHeader(std::format("{}##{}", item.first, node_id).c_str(),
+                                         ImGuiTreeNodeFlags_DefaultOpen))) {
+                for (auto node : item.second->SortedChildren) RenderNode(node);
+                ImGui::Spacing();
+                ImGui::Spacing();
+            } else {
+                for (auto node : item.second->Children) DummyRenderer(node);
             }
         }
-    }
-    ImGui::PopStyleVar();
-    ImGui::EndChild();
+        ImGui::PopStyleVar();
+        ImGui::EndChild();
 
-    ImGui::SameLine();
+        // Drag handle
+        ImGui::SameLine(0.0f, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
+        ImGui::InvisibleButton("##SidebarDragHandle", ImVec2(handleWidth, -FLT_MIN));
+        ImGui::PopStyleVar();
+
+        if (ImGui::IsItemHovered()) ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+
+        if (ImGui::IsItemActive() && ImGui::GetIO().MouseDelta.x != 0.0f) {
+            sidebarWidth = std::clamp(sidebarWidth + ImGui::GetIO().MouseDelta.x, minSidebarWidth, maxSidebarWidth);
+        }
+
+        // Tint the handle on hover/active
+        {
+            ImU32 col = ImGui::IsItemActive()    ? ImGui::GetColorU32(ImGuiCol_SeparatorActive)
+                        : ImGui::IsItemHovered() ? ImGui::GetColorU32(ImGuiCol_SeparatorHovered)
+                                                 : ImGui::GetColorU32(ImGuiCol_Separator);
+
+            ImGui::GetWindowDrawList()->AddRectFilled(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), col);
+        }
+
+        ImGui::SameLine(0.0f, 0.0f);
+    }
 
     // Content section
     ImGui::BeginChild("SKSEModControlPanelMenuNode", ImVec2(0, -FLT_MIN), ImGuiChildFlags_Border);
-    if (display_node) {
-        display_node->Render();
-    }
+    if (display_node) display_node->Render();
     ImGui::EndChild();
 
     ImGui::End();
