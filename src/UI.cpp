@@ -1,6 +1,8 @@
 #include "UI.h"
 #include "WindowManager.h"
 #include <algorithm>
+#include <cmath>
+#include <set>
 #include <imgui.h>
 #include "Renderer.h"
 #include "Application.h"
@@ -27,9 +29,51 @@ namespace {
     constexpr auto ARCHIVE_ICON = "\xEF\x86\x87";
     constexpr ImVec4 FAVORITE_STAR_COLOR = ImVec4(1.0f, 0.84f, 0.0f, 1.0f);
 
+    constexpr auto SIDEBAR_COLLAPSED_ICON = "\xEF\x83\x89";
+    constexpr float SIDEBAR_EXPANDED_RATIO = 0.3f;
+    constexpr float SIDEBAR_ANIMATION_SPEED = 12.0f;
+    constexpr float SIDEBAR_CONTENT_FADE_START = 0.5f;
+
     std::string pendingArchiveMenuName;
     UI::MenuTree* pendingArchiveMenu = nullptr;
     bool archiveConfirmationRequested = false;
+
+    // 0.0f = collapsed, 1.0f = expanded.
+    float sidebarAnimation = 1.0f;
+    bool sidebarFocused = false;
+    bool sidebarFilterActive = false;
+    bool sidebarMousePressedInside = false;
+    std::set<std::string> favoriteMenusOpenedByDefault;
+
+    float SmoothStep(float t) { return t * t * (3.0f - 2.0f * t); }
+
+    void UpdateSidebarAnimation(bool expanded) {
+        const float deltaTime = ImGui::GetIO().DeltaTime > 0.0f ? ImGui::GetIO().DeltaTime : 1.0f / 60.0f;
+        const float target = expanded ? 1.0f : 0.0f;
+        sidebarAnimation +=
+            (target - sidebarAnimation) * std::clamp(deltaTime * SIDEBAR_ANIMATION_SPEED, 0.0f, 1.0f);
+        if (std::abs(target - sidebarAnimation) < 0.001f) {
+            sidebarAnimation = target;
+        }
+    }
+
+    float GetSidebarContentAlpha() {
+        return std::clamp((sidebarAnimation - SIDEBAR_CONTENT_FADE_START) / (1.0f - SIDEBAR_CONTENT_FADE_START),
+                          0.0f, 1.0f);
+    }
+
+    float GetSidebarIconAlpha() {
+        return std::clamp(1.0f - sidebarAnimation / SIDEBAR_CONTENT_FADE_START, 0.0f, 1.0f);
+    }
+
+    void RenderCollapsedSidebarIcon(float alpha) {
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * alpha);
+        const float iconWidth = ImGui::CalcTextSize(SIDEBAR_COLLAPSED_ICON).x;
+        const float offsetX = std::max((ImGui::GetContentRegionAvail().x - iconWidth) * 0.5f, 0.0f);
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
+        ImGui::TextUnformatted(SIDEBAR_COLLAPSED_ICON);
+        ImGui::PopStyleVar();
+    }
 
     struct WindowSizeAndPosition {
         bool HasSavedState = false;
@@ -298,11 +342,51 @@ void __stdcall UI::RenderMenuWindow() {
     float headerHeight = 41.0f;
     float headerOffsetY = 5.0f;
 
+    const ImVec2 sidebarOrigin = ImGui::GetCursorScreenPos();
+    const float sidebarRegionHeight = ImGui::GetContentRegionAvail().y;
+    const float sidebarExpandedWidth = ImGui::GetContentRegionAvail().x * SIDEBAR_EXPANDED_RATIO;
+    const float sidebarCollapsedWidth = ImGui::GetFrameHeight() + ImGui::GetStyle().WindowPadding.x * 2.0f;
+    const float sidebarPreviousWidth =
+        sidebarCollapsedWidth + (sidebarExpandedWidth - sidebarCollapsedWidth) * SmoothStep(sidebarAnimation);
 
+    const bool mainWindowHovered =
+        ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+    const bool sidebarHovered =
+        mainWindowHovered &&
+        ImGui::IsMouseHoveringRect(sidebarOrigin,
+                                   ImVec2(sidebarOrigin.x + sidebarPreviousWidth,
+                                          sidebarOrigin.y + sidebarRegionHeight),
+                                   false);
+
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+        sidebarMousePressedInside = sidebarHovered;
+    }
+    if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+        sidebarMousePressedInside = false;
+    }
+
+    const bool sidebarExpanded = sidebarHovered || sidebarMousePressedInside || sidebarFocused ||
+                                 sidebarFilterActive || display_node == nullptr;
+    UpdateSidebarAnimation(sidebarExpanded);
+
+    const float sidebarWidth =
+        sidebarCollapsedWidth + (sidebarExpandedWidth - sidebarCollapsedWidth) * SmoothStep(sidebarAnimation);
+    const float sidebarContentAlpha = GetSidebarContentAlpha();
+    const float sidebarIconAlpha = GetSidebarIconAlpha();
+    sidebarFocused = false;
+    sidebarFilterActive = false;
 
     // Filter section
-    ImGui::BeginChild("TreeView2", ImVec2(ImGui::GetContentRegionAvail().x * 0.3f, filterHeight), ImGuiChildFlags_None);
-    filter.Draw("##SKSEModControlPanelMenuFilter", -FLT_MIN);
+    ImGui::BeginChild("TreeView2", ImVec2(sidebarWidth, filterHeight), ImGuiChildFlags_None);
+    if (sidebarContentAlpha > 0.0f) {
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * sidebarContentAlpha);
+        filter.Draw("##SKSEModControlPanelMenuFilter", -FLT_MIN);
+        sidebarFilterActive = ImGui::IsItemActive();
+        ImGui::PopStyleVar();
+    } else if (sidebarIconAlpha > 0.0f) {
+        RenderCollapsedSidebarIcon(sidebarIconAlpha);
+    }
+    sidebarFocused |= ImGui::GetIO().NavVisible && ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
     ImGui::EndChild();
 
     ImGui::SameLine();
@@ -320,57 +404,71 @@ void __stdcall UI::RenderMenuWindow() {
     ImGui::EndChild();
 
     // Tree view section
-    ImGui::BeginChild("SKSEModControlPanelTreeView", ImVec2(ImGui::GetContentRegionAvail().x * 0.3f, -FLT_MIN),
-                      ImGuiChildFlags_Border);
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 5.0f));
-    std::vector<const std::pair<const std::string, UI::MenuTree*>*> rootMenus;
-    rootMenus.reserve(RootMenu->Children.size());
-    for (const auto& item : RootMenu->Children) {
-        rootMenus.push_back(&item);
+    ImGui::BeginChild("SKSEModControlPanelTreeView", ImVec2(sidebarWidth, -FLT_MIN), ImGuiChildFlags_Border);
+    if (sidebarContentAlpha > 0.0f) {
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * sidebarContentAlpha);
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 5.0f));
+        std::vector<const std::pair<const std::string, UI::MenuTree*>*> rootMenus;
+        rootMenus.reserve(RootMenu->Children.size());
+        for (const auto& item : RootMenu->Children) {
+            rootMenus.push_back(&item);
+        }
+        std::stable_sort(rootMenus.begin(), rootMenus.end(), [](const auto* left, const auto* right) {
+            const bool leftFavorite = RootMenuConfig::IsFavorite(left->first);
+            const bool rightFavorite = RootMenuConfig::IsFavorite(right->first);
+            if (leftFavorite != rightFavorite) {
+                return leftFavorite;
+            }
+            return left->first < right->first;
+        });
+
+        for (const auto* rootMenu : rootMenus) {
+            const auto& item = *rootMenu;
+            if (RootMenuConfig::IsArchived(item.first)) {
+                for (auto node : item.second->Children) {
+                    DummyRenderer(node);
+                }
+                continue;
+            }
+
+            const bool favorite = RootMenuConfig::IsFavorite(item.first);
+            const bool passesFilter = filter.PassFilter(item.first.c_str());
+
+            if (passesFilter) {
+                if (favorite) {
+                    if (favoriteMenusOpenedByDefault.insert(item.first).second) {
+                        ImGui::SetNextItemOpen(true);
+                    }
+                } else {
+                    favoriteMenusOpenedByDefault.erase(item.first);
+                }
+            }
+
+            const auto headerLabel = std::format("{}##RootMenu-{}", item.first, item.first);
+            const auto headerFlags = ImGuiTreeNodeFlags_AllowOverlap | ImGuiTreeNodeFlags_ClipLabelForTrailingButton;
+            const bool headerOpen = passesFilter && ImGui::CollapsingHeader(headerLabel.c_str(), headerFlags);
+
+            if (passesFilter) {
+                RenderRootMenuButtons(item.first, item.second, favorite);
+            }
+
+            if (RootMenuConfig::IsArchived(item.first)) {
+                for (auto node : item.second->Children) {
+                    DummyRenderer(node);
+                }
+            } else if (headerOpen) {
+                for (auto node : item.second->SortedChildren) {
+                    RenderNode(node);
+                }
+            } else {
+                for (auto node : item.second->Children) {
+                    DummyRenderer(node);
+                }
+            }
+        }
+        ImGui::PopStyleVar(2);
     }
-    std::stable_sort(rootMenus.begin(), rootMenus.end(), [](const auto* left, const auto* right) {
-        const bool leftFavorite = RootMenuConfig::IsFavorite(left->first);
-        const bool rightFavorite = RootMenuConfig::IsFavorite(right->first);
-        if (leftFavorite != rightFavorite) {
-            return leftFavorite;
-        }
-        return left->first < right->first;
-    });
-
-    for (const auto* rootMenu : rootMenus) {
-        const auto& item = *rootMenu;
-        if (RootMenuConfig::IsArchived(item.first)) {
-            for (auto node : item.second->Children) {
-                DummyRenderer(node);
-            }
-            continue;
-        }
-
-        const bool favorite = RootMenuConfig::IsFavorite(item.first);
-        const bool passesFilter = filter.PassFilter(item.first.c_str());
-        const auto headerLabel = std::format("{}##RootMenu-{}", item.first, item.first);
-        const auto headerFlags = ImGuiTreeNodeFlags_AllowOverlap | ImGuiTreeNodeFlags_ClipLabelForTrailingButton;
-        const bool headerOpen = passesFilter && ImGui::CollapsingHeader(headerLabel.c_str(), headerFlags);
-
-        if (passesFilter) {
-            RenderRootMenuButtons(item.first, item.second, favorite);
-        }
-
-        if (RootMenuConfig::IsArchived(item.first)) {
-            for (auto node : item.second->Children) {
-                DummyRenderer(node);
-            }
-        } else if (headerOpen) {
-            for (auto node : item.second->SortedChildren) {
-                RenderNode(node);
-            }
-        } else {
-            for (auto node : item.second->Children) {
-                DummyRenderer(node);
-            }
-        }
-    }
-    ImGui::PopStyleVar();
+    sidebarFocused |= ImGui::GetIO().NavVisible && ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
     ImGui::EndChild();
 
     ImGui::SameLine();
