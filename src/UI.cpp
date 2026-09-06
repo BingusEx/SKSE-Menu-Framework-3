@@ -3,7 +3,10 @@
 #include <algorithm>
 #include <cmath>
 #include <set>
+#include <deque>
 #include <imgui.h>
+#include <mutex>
+#include <set>
 #include "Renderer.h"
 #include "Application.h"
 #include "SKSEMenuFramework.h"
@@ -25,6 +28,7 @@ static ImGuiTreeNodeFlags base_flags =
 static int selection_mask = (1 << 2);
 
 namespace {
+    
     constexpr auto FAVORITE_STAR = "\xEF\x80\x85";
     constexpr auto ARCHIVE_ICON = "\xEF\x86\x87";
     constexpr ImVec4 FAVORITE_STAR_COLOR = ImVec4(1.0f, 0.84f, 0.0f, 1.0f);
@@ -33,6 +37,16 @@ namespace {
     constexpr float SIDEBAR_EXPANDED_RATIO = 0.3f;
     constexpr float SIDEBAR_ANIMATION_SPEED = 12.0f;
     constexpr float SIDEBAR_CONTENT_FADE_START = 0.5f;
+
+    struct MenuNodeLocation {
+        UI::MenuTree* Parent = nullptr;
+        UI::MenuTree* Node = nullptr;
+        std::string Name;
+    };
+
+    std::recursive_mutex menuTreeMutex;
+    std::deque<UI::MenuMutation> pendingMenuMutations;
+    std::set<MenuPath::Segments> projectedMenuPaths;
 
     std::string pendingArchiveMenuName;
     UI::MenuTree* pendingArchiveMenu = nullptr;
@@ -76,16 +90,38 @@ namespace {
     }
 
     struct WindowSizeAndPosition {
+        const char* Section;
         bool HasSavedState = false;
+        bool PendingSave = false;
         ImVec2 Position{};
         ImVec2 Size{};
     };
 
-    WindowSizeAndPosition mainWindowSizeAndPosition;
-    WindowSizeAndPosition configWindowSizeAndPosition;
+    WindowSizeAndPosition mainWindowSizeAndPosition{"MainWindow"};
+    WindowSizeAndPosition configWindowSizeAndPosition{"SettingsWindow"};
 
     void ApplyWindowSizeAndPosition(WindowSizeAndPosition& sizeAndPosition, const ImVec2& defaultPosition, const ImVec2& defaultSize,
                              const ImVec2& defaultPivot = ImVec2{0.0f, 0.0f}) {
+        const auto viewport = ImGui::GetMainViewport();
+        if (!sizeAndPosition.HasSavedState && viewport->Size.x > 0.0f && viewport->Size.y > 0.0f) {
+            Ini ini("SKSEMenuFramework.ini");
+            ini.SetSection(sizeAndPosition.Section);
+            constexpr float missing = std::numeric_limits<float>::quiet_NaN();
+            const ImVec2 position{ini.GetFloat("X", missing), ini.GetFloat("Y", missing)};
+            const ImVec2 size{ini.GetFloat("Width", missing), ini.GetFloat("Height", missing)};
+            if (std::isfinite(position.x) && std::isfinite(position.y) &&
+                std::isfinite(size.x) && std::isfinite(size.y) && size.x > 0.0f && size.y > 0.0f) {
+                // Fractions survive resolution changes; keep restored windows inside the display.
+                sizeAndPosition.Size = ImClamp(ImMin(size, ImVec2{1.0f, 1.0f}) * viewport->Size,
+                    ImMin(ImGui::GetStyle().WindowMinSize, viewport->Size), viewport->Size);
+                // Round INI fractions back to pixels before ImGui truncates them on Begin.
+                sizeAndPosition.Size = {std::round(sizeAndPosition.Size.x), std::round(sizeAndPosition.Size.y)};
+                sizeAndPosition.Position = viewport->Pos + ImClamp(position, ImVec2{},
+                    ImVec2{1.0f, 1.0f} - sizeAndPosition.Size / viewport->Size) * viewport->Size;
+                sizeAndPosition.Position = {std::round(sizeAndPosition.Position.x), std::round(sizeAndPosition.Position.y)};
+                sizeAndPosition.HasSavedState = true;
+            }
+        }
         if (sizeAndPosition.HasSavedState) {
             ImGui::SetNextWindowPos(sizeAndPosition.Position, ImGuiCond_Appearing);
             ImGui::SetNextWindowSize(sizeAndPosition.Size, ImGuiCond_Appearing);
@@ -96,6 +132,8 @@ namespace {
     }
 
     void SaveWindowSizeAndPosition(WindowSizeAndPosition& sizeAndPosition) {
+        sizeAndPosition.PendingSave |= sizeAndPosition.HasSavedState &&
+            (sizeAndPosition.Position != ImGui::GetWindowPos() || sizeAndPosition.Size != ImGui::GetWindowSize());
         sizeAndPosition.Position = ImGui::GetWindowPos();
         sizeAndPosition.Size = ImGui::GetWindowSize();
         sizeAndPosition.HasSavedState = true;
@@ -107,6 +145,7 @@ namespace {
     }
 
     void SetWindowSizeAndPosition(WindowSizeAndPosition& sizeAndPosition, const ImVec2& position, const ImVec2& size) {
+        sizeAndPosition.PendingSave = true;
         sizeAndPosition.Position = position;
         sizeAndPosition.Size = size;
         sizeAndPosition.HasSavedState = true;
@@ -140,6 +179,191 @@ namespace {
             }
         }
         return false;
+    }
+
+    MenuPath::Segments GetRenamedPath(const MenuPath::Segments& path, const std::string& newName) {
+        auto renamedPath = path;
+        renamedPath.back() = newName;
+        return renamedPath;
+    }
+
+    bool IsPathInSubtree(const MenuPath::Segments& path, const MenuPath::Segments& subtreePath) {
+        return path.size() >= subtreePath.size() &&
+               std::equal(subtreePath.begin(), subtreePath.end(), path.begin());
+    }
+
+    void CollectMenuPaths(const UI::MenuTree* node, MenuPath::Segments& parentPath,
+                          std::set<MenuPath::Segments>& paths) {
+        for (const auto& [name, child] : node->Children) {
+            parentPath.push_back(name);
+            paths.insert(parentPath);
+            CollectMenuPaths(child, parentPath, paths);
+            parentPath.pop_back();
+        }
+    }
+
+    void RebuildProjectedMenuPaths() {
+        projectedMenuPaths.clear();
+        MenuPath::Segments rootPath;
+        CollectMenuPaths(UI::RootMenu, rootPath, projectedMenuPaths);
+    }
+
+    void ProjectMenuMutation(const UI::MenuMutation& mutation) {
+        if (mutation.Type == UI::MenuMutationType::Delete) {
+            std::erase_if(projectedMenuPaths, [&mutation](const MenuPath::Segments& path) {
+                return IsPathInSubtree(path, mutation.Path);
+            });
+            return;
+        }
+
+        const auto renamedPath = GetRenamedPath(mutation.Path, mutation.NewName);
+        std::set<MenuPath::Segments> renamedPaths;
+        for (const auto& path : projectedMenuPaths) {
+            if (IsPathInSubtree(path, mutation.Path)) {
+                auto renamedDescendantPath = renamedPath;
+                renamedDescendantPath.insert(renamedDescendantPath.end(), path.begin() + mutation.Path.size(),
+                                             path.end());
+                renamedPaths.insert(std::move(renamedDescendantPath));
+            } else {
+                renamedPaths.insert(path);
+            }
+        }
+        projectedMenuPaths.swap(renamedPaths);
+    }
+
+    bool FindMenuNode(const MenuPath::Segments& path, MenuNodeLocation& location) {
+        UI::MenuTree* parent = UI::RootMenu;
+
+        for (const auto& name : path) {
+            const auto child = parent->Children.find(name);
+            if (child == parent->Children.end()) {
+                return false;
+            }
+
+            location = {parent, child->second, name};
+            parent = child->second;
+        }
+        return location.Node != nullptr;
+    }
+
+    void ReplaceSortedChildName(UI::MenuTree* parent, UI::MenuTree* node, const std::string& newName) {
+        std::vector<std::pair<const std::string, UI::MenuTree*>> renamedChildren;
+        renamedChildren.reserve(parent->SortedChildren.size());
+        for (const auto& child : parent->SortedChildren) {
+            renamedChildren.emplace_back(child.second == node ? newName : child.first, child.second);
+        }
+        parent->SortedChildren.swap(renamedChildren);
+    }
+
+    void RemoveSortedChild(UI::MenuTree* parent, const UI::MenuTree* node) {
+        std::vector<std::pair<const std::string, UI::MenuTree*>> remainingChildren;
+        remainingChildren.reserve(parent->SortedChildren.size());
+        for (const auto& child : parent->SortedChildren) {
+            if (child.second != node) {
+                remainingChildren.emplace_back(child.first, child.second);
+            }
+        }
+        parent->SortedChildren.swap(remainingChildren);
+    }
+
+    void DestroyMenuTree(UI::MenuTree* node) {
+        for (const auto& child : node->Children) {
+            DestroyMenuTree(child.second);
+        }
+        delete node;
+    }
+
+    bool RenameMenuNode(const UI::MenuMutation& mutation) {
+        MenuNodeLocation location;
+        if (!FindMenuNode(mutation.Path, location)) {
+            return false;
+        }
+
+        if (location.Name == mutation.NewName) {
+            if (location.Node->Render) {
+                location.Node->Title = mutation.NewName;
+            }
+            return true;
+        }
+        if (location.Parent->Children.contains(mutation.NewName)) {
+            return false;
+        }
+
+        location.Parent->Children.erase(location.Name);
+        location.Parent->Children.emplace(mutation.NewName, location.Node);
+        ReplaceSortedChildName(location.Parent, location.Node, mutation.NewName);
+
+        if (location.Node->Render) {
+            location.Node->Title = mutation.NewName;
+        }
+        if (location.Parent == UI::RootMenu) {
+            RootMenuConfig::RenameMenu(location.Name, mutation.NewName);
+            if (pendingArchiveMenu == location.Node) {
+                pendingArchiveMenuName = mutation.NewName;
+            }
+        }
+        return true;
+    }
+
+    bool DeleteMenuNode(const UI::MenuMutation& mutation) {
+        MenuNodeLocation location;
+        if (!FindMenuNode(mutation.Path, location)) {
+            return false;
+        }
+
+        if (ContainsNode(location.Node, display_node)) {
+            display_node = nullptr;
+        }
+        if (ContainsNode(location.Node, pendingArchiveMenu)) {
+            pendingArchiveMenuName.clear();
+            pendingArchiveMenu = nullptr;
+            archiveConfirmationRequested = false;
+        }
+
+        location.Parent->Children.erase(location.Name);
+        RemoveSortedChild(location.Parent, location.Node);
+        if (location.Parent == UI::RootMenu) {
+            RootMenuConfig::RemoveMenu(location.Name);
+        }
+        DestroyMenuTree(location.Node);
+        return true;
+    }
+
+    void ApplyPendingMenuMutationsLocked() {
+        while (!pendingMenuMutations.empty()) {
+            const auto mutation = std::move(pendingMenuMutations.front());
+            pendingMenuMutations.pop_front();
+
+            const bool applied = mutation.Type == UI::MenuMutationType::Rename
+                                     ? RenameMenuNode(mutation)
+                                     : DeleteMenuNode(mutation);
+            if (!applied) {
+                logger::warn("Could not apply queued Mod Control Panel mutation for '{}'.", mutation.RequestedPath);
+            }
+        }
+        projectedMenuPaths.clear();
+    }
+
+    void AddToTreeInternal(UI::MenuTree* node, std::vector<std::string>& path, RenderFunction render,
+                           const std::string& title) {
+        if (!path.empty()) {
+            const auto currentName = path.front();
+            path.erase(path.begin());
+
+            const auto foundItem = node->Children.find(currentName);
+            if (foundItem != node->Children.end()) {
+                AddToTreeInternal(foundItem->second, path, render, title);
+            } else {
+                auto newItem = new UI::MenuTree();
+                node->Children[currentName] = newItem;
+                node->SortedChildren.emplace_back(currentName, newItem);
+                AddToTreeInternal(newItem, path, render, title);
+            }
+            return;
+        }
+
+        node->Render = render;
+        node->Title = title;
     }
 
     void SetRootMenuArchived(const std::string& menuName, UI::MenuTree* menu, bool archived) {
@@ -224,6 +448,12 @@ namespace {
         const auto viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
         if (ImGui::BeginPopupModal(popupTitle.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            if (!pendingArchiveMenu) {
+                ImGui::CloseCurrentPopup();
+                ImGui::EndPopup();
+                return;
+            }
+
             ImGui::TextUnformatted(Translations::Get("Menu.Archive.Confirm"));
             ImGui::TextUnformatted(pendingArchiveMenuName.c_str());
             ImGui::Separator();
@@ -283,7 +513,83 @@ void RenderNode(std::pair<const std::string, UI::MenuTree*>& node) {
     }
 }
 
+bool UI::QueueMenuMutation(MenuMutationType type, std::string_view path, std::string_view newName) {
+    auto parsedPath = MenuPath::Parse(path);
+    if (!parsedPath) {
+        return false;
+    }
+
+    std::string parsedNewName;
+    if (type == MenuMutationType::Rename) {
+        auto parsedName = MenuPath::ParseSegment(newName);
+        if (!parsedName) {
+            return false;
+        }
+        parsedNewName = std::move(*parsedName);
+    }
+
+    MenuMutation mutation{type, std::move(*parsedPath), std::move(parsedNewName), std::string(path)};
+    std::lock_guard<std::recursive_mutex> lock(menuTreeMutex);
+
+    if (pendingMenuMutations.empty()) {
+        RebuildProjectedMenuPaths();
+    }
+    if (!projectedMenuPaths.contains(mutation.Path)) {
+        return false;
+    }
+
+    if (mutation.Type == MenuMutationType::Rename) {
+        const auto renamedPath = GetRenamedPath(mutation.Path, mutation.NewName);
+        if (renamedPath != mutation.Path && projectedMenuPaths.contains(renamedPath)) {
+            return false;
+        }
+    }
+
+    pendingMenuMutations.push_back(std::move(mutation));
+    ProjectMenuMutation(pendingMenuMutations.back());
+    return true;
+}
+
+void UI::ApplyPendingMenuMutations() {
+    std::lock_guard<std::recursive_mutex> lock(menuTreeMutex);
+    ApplyPendingMenuMutationsLocked();
+}
+
+void UI::SaveWindowSettings() {
+    if ((!mainWindowSizeAndPosition.PendingSave && !configWindowSizeAndPosition.PendingSave) ||
+        ((WindowManager::MainInterface->IsOpen || WindowManager::ConfigInterface->IsOpen) &&
+         (ImGui::IsMouseDown(ImGuiMouseButton_Left) || ImGui::GetCurrentContext()->NavWindowingTarget))) {
+        return;
+    }
+    const auto viewport = ImGui::GetMainViewport();
+    if (viewport->Size.x <= 0.0f || viewport->Size.y <= 0.0f) {
+        return;
+    }
+    Ini ini("SKSEMenuFramework.ini");
+    bool saved = true;
+    for (const auto state : {&mainWindowSizeAndPosition, &configWindowSizeAndPosition}) {
+        if (!state->PendingSave) {
+            continue;
+        }
+        // Retry on the next layout change if writing fails, not on every render frame.
+        state->PendingSave = false;
+        ini.SetSection(state->Section);
+        const ImVec2 position = (state->Position - viewport->Pos) / viewport->Size;
+        const ImVec2 size = state->Size / viewport->Size;
+        saved &= ini.SetFloat("X", position.x);
+        saved &= ini.SetFloat("Y", position.y);
+        saved &= ini.SetFloat("Width", size.x);
+        saved &= ini.SetFloat("Height", size.y);
+    }
+    if (!saved || !ini.Save()) {
+        logger::warn("Failed to save window layouts to SKSEMenuFramework.ini");
+    }
+}
+
 void __stdcall UI::RenderMenuWindow() {
+    ApplyPendingMenuMutations();
+    std::lock_guard<std::recursive_mutex> lock(menuTreeMutex);
+
     auto viewport = ImGui::GetMainViewport();
     ApplyWindowSizeAndPosition(mainWindowSizeAndPosition, viewport->GetCenter(), ImVec2{viewport->Size.x * 0.8f, viewport->Size.y * 0.8f},
                         ImVec2{0.5f, 0.5f});
@@ -485,24 +791,27 @@ void __stdcall UI::RenderMenuWindow() {
     ImGui::End();
 }
 
-void UI::AddToTree(UI::MenuTree* node, std::vector<std::string>& path, RenderFunction render, std::string title) {
-    if (!path.empty()) {
-        auto currentName = path.front();
-        path.erase(path.begin());
-
-        auto foundItem = node->Children.find(currentName);
-        if (foundItem != node->Children.end()) {
-            AddToTree(foundItem->second, path, render, title);
-        } else {
-            auto newItem = new UI::MenuTree();
-            node->Children[currentName] = newItem;
-            node->SortedChildren.push_back(std::pair<const std::string, UI::MenuTree*>(currentName, newItem));
-            AddToTree(newItem, path, render, title);
-        }
-    } else {
-        node->Render = render;
-        node->Title = title;
+UI::BackAction UI::ResolveBack() {
+    // Let ImGui cancel first: a modal, or an in-progress edit, is "inside" the
+    // page and has to unwind before the page itself does.
+    if (ImGui::IsAnyItemActive() ||
+        ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel)) {
+        return BackAction::PassToImGui;
     }
+
+    // A page is showing: back means return to the tree, not leave the menu.
+    if (display_node) {
+        display_node = nullptr;
+        return BackAction::PoppedPage;
+    }
+
+    return BackAction::CloseMenu;
+}
+
+void UI::AddToTree(UI::MenuTree* node, std::vector<std::string>& path, RenderFunction render, std::string title) {
+    ApplyPendingMenuMutations();
+    std::lock_guard<std::recursive_mutex> lock(menuTreeMutex);
+    AddToTreeInternal(node, path, render, title);
 }
 
 bool ToggleButton(const char* label, bool* v) {

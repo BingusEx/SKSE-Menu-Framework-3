@@ -1,6 +1,7 @@
 #include "Hooks.h"
 #include <format>
 #include "Renderer.h"
+#include "UI.h"
 #include "FontManager.h"
 #include "imgui_impl_dx11.h"
 #include "imgui_impl_win32.h"
@@ -84,7 +85,13 @@ void Hooks::RenderUIHook::install() {
     auto& trampoline = SKSE::GetTrampoline();
     originalFunction1 = trampoline.write_call<5>(REL::RelocationID(35556, 36555, 35556).address() + REL::Relocate(0x3ab, 0x371, 0x355), thunk1);
     SKSE::AllocTrampoline(14);
-    originalFunction2 = trampoline.write_call<5>(REL::RelocationID(38085, 39039).address() + REL::Relocate(0x19a, 0x19a, 0x3FC), thunk2);
+
+    const auto version = REL::Module::get().version();
+    const auto is_version_1_7 = version.major() == 1 && version.minor() == 7;
+
+    originalFunction2 = trampoline.write_call<5>(
+        REL::RelocationID(38085, 39039).address() + REL::Relocate(0x19a, is_version_1_7 ? 0x1a0 : 0x19a, 0x3FC),
+        thunk2);
 }
 
 void Hooks::ProcessInputQueueHook::install() {
@@ -300,6 +307,7 @@ void Render() {
         io.MouseDrawCursor = false;
         GameLock::SetState(GameLock::State::Unlocked);
     }
+    UI::SaveWindowSettings();
     FontManager::CleanFont();
     ImGui::EndFrame();
     ImGui::Render();

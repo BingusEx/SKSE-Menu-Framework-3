@@ -8,6 +8,8 @@ unsigned int Config::ToggleKey = 0x3B;
 uint8_t Config::ToggleMode = 0;
 unsigned int Config::ToggleKeyGamePad = 0;
 uint8_t Config::ToggleModeGamePad = 0;
+int Config::DoublePressThreshold = 300;
+bool Config::ConsumeToggleKey = false;
 bool Config::FreezeTimeOnMenu = true;
 int Config::MenuStyle = 0;
 std::vector<std::string> Config::MenuStyles;
@@ -19,6 +21,7 @@ bool Config::EnableKorean = false;
 bool Config::EnableCyrillic = false;
 bool Config::EnableThai = false;
 bool Config::EnableTurkish = false;
+bool Config::EnablePolish = false;
 float Config::FontSizeMedium = 32.0f;
 float Config::MinFontSize = 12.0f;
 float Config::MaxFontSize = 64.0f;
@@ -33,6 +36,10 @@ void Config::Init() {
 
     ToggleKeyGamePad = GetKeyBinding(ini->GetString("ToggleKeyGamePad", ""),RE::INPUT_DEVICE::kGamepad);
     ToggleModeGamePad = GetToggleMode(ini->GetString("ToggleModeGamePad", "DoublePress"));
+    DoublePressThreshold = ini->GetInt("DoublePressThreshold", 300);
+    if (DoublePressThreshold < 50) DoublePressThreshold = 50;
+    if (DoublePressThreshold > 2000) DoublePressThreshold = 2000;
+    ConsumeToggleKey = ini->GetBool("ConsumeToggleKey", false);
 
     FreezeTimeOnMenu = ini->GetBool("FreezeTimeOnMenu", true);
     BlurBackgroundOnMenu = ini->GetBool("BlurBackgroundOnMenu", true);
@@ -49,6 +56,7 @@ void Config::Init() {
     EnableCyrillic = ini->GetBool("EnableCyrillic", false);
     EnableThai = ini->GetBool("EnableThai", false);
     EnableTurkish = ini->GetBool("EnableTurkish", false);
+    EnablePolish = ini->GetBool("EnablePolish", false);
     MinFontSize = ini->GetFloat("MinFontSize", 12.0f);
     MaxFontSize = ini->GetFloat("MaxFontSize", 64.0f);
     if (!std::isfinite(MinFontSize)) {
@@ -121,6 +129,7 @@ void Config::Save() {
     ini->SetBool("EnableCyrillic", EnableCyrillic);
     ini->SetBool("EnableThai", EnableThai);
     ini->SetBool("EnableTurkish", EnableTurkish);
+    ini->SetBool("EnablePolish", EnablePolish);
 
     ini->SetFloat("MinFontSize", MinFontSize);
     ini->SetFloat("MaxFontSize", MaxFontSize);

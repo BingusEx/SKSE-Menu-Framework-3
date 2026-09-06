@@ -1,17 +1,37 @@
 #include "SKSEMenuFramework.h"
 #include "FontManager.h"
 #include <imgui.h>
-#include "Application.h"
 #include "Renderer.h"
 #include "UI.h"
+#include "MenuPath.h"
 #include "TextureLoader.h"
 #include "WindowManager.h"
 
-#define MENU_FRAMEWORK_VERSION 3.7f
+#define MENU_FRAMEWORK_VERSION 3.8f
+namespace {
+    constexpr uint32_t MENU_FRAMEWORK_API_VERSION = 1;
+}
 
-void AddSectionItem(const char* path, RenderFunction rendererFunction) { 
-    auto pathSplit = SplitString(path, '/');
-    AddToTree(UI::RootMenu, pathSplit, rendererFunction, pathSplit.back());
+void AddSectionItem(const char* path, RenderFunction rendererFunction) {
+    if (!path || !rendererFunction) {
+        return;
+    }
+
+    auto pathSegments = MenuPath::Parse(path);
+    if (!pathSegments) {
+        return;
+    }
+
+    const std::string title = pathSegments->back();
+    AddToTree(UI::RootMenu, *pathSegments, rendererFunction, title);
+}
+
+bool RenameSection(const char* path, const char* newName) {
+    return UI::QueueMenuMutation(UI::MenuMutationType::Rename, path ? path : "", newName ? newName : "");
+}
+
+bool DeleteSection(const char* path) {
+    return UI::QueueMenuMutation(UI::MenuMutationType::Delete, path ? path : "");
 }
 
 WindowInterface* AddWindow(RenderFunction rendererFunction) { 
@@ -88,6 +108,8 @@ int64_t RegisterEventPriority(Event::EventCallback callback, float priority) {
 void UnregisterEvent(int64_t id) { Event::RemoveEventListener(id); }
 
 float GetMenuFrameworkVersion() { return MENU_FRAMEWORK_VERSION; }
+
+uint32_t GetMenuFrameworkAPIVersion() { return MENU_FRAMEWORK_API_VERSION; }
 
 WindowInterface* GetMainWindow() { return WindowManager::MainInterface; }
 
